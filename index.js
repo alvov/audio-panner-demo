@@ -102,7 +102,7 @@
     formNode['panner-cone-outer'].value = panner.coneOuterAngle;
     formNode['panner-cone-gain'].value = panner.coneOuterGain;
     formNode.addEventListener('input', event => {
-        switch (e.target.name) {
+        switch (event.target.name) {
             case 'panner-x':
                 state.pannerPosition[0] = event.target.valueAsNumber;
                 break;
