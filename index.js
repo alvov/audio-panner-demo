@@ -1,6 +1,10 @@
 (function() {
     'use strict';
 
+    const loadingScreen = document.createElement('div');
+    loadingScreen.className = 'loading';
+    document.body.appendChild(loadingScreen);
+
     const fieldNode = document.querySelector('.field');
     const state = {
         cursorPosition: null,
@@ -81,6 +85,7 @@
             render();
             fieldNode.appendChild(pannerNode);
             fieldNode.appendChild(listenerNode);
+            loadingScreen.remove();
             audioSource.start(0);
         });
 

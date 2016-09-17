@@ -18,6 +18,23 @@ body {
     font: 16px/1.4 'Arial Narrow', Arial, sans-serif;
 }
 
+/* loading screen */
+.loading {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(255, 255, 255, 0.95);
+}
+.loading::after {
+    content: 'Loading sound file...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 /* controls block */
 .controls {
     flex: 0 0 400px;
