@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio panner demo</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <form class="controls" name="controls">
+        <label class="controls-sound">
+            <input type="checkbox" name="mute" class="controls-sound-input" checked>
+            <span class="controls-sound-icon"></span>
+        </label>
+        <h1 class="controls-title">Audio panner demo</h1>
+        <fieldset class="controls-fieldset">
+            <legend class="controls-legend">Listener</legend>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="listener-x">positionX</label>
+                <input class="controls-fieldset-row-input" type="number" name="listener-x" id="listener-x"
+                    readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="listener-y">positionY</label>
+                <input class="controls-fieldset-row-input" type="number" name="listener-y" id="listener-y"
+                    readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="listener-z">positionZ</label>
+                <input class="controls-fieldset-row-input" type="number" name="listener-z" id="listener-z"
+                    readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="listener-angle">angle</label>
+                <input class="controls-fieldset-row-input" type="number" name="listener-angle" id="listener-angle"
+                    readonly>
+            </div>
+        </fieldset><!--
+        --><fieldset class="controls-fieldset">
+            <legend class="controls-legend">Panner</legend>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-x">positionX</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-x" id="panner-x">
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-y">positionY</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-y" id="panner-y">
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-z">positionZ</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-z" id="panner-z" readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-angle">angle</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-angle" id="panner-angle"
+                    min="0" max="360" step="10">
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-cone-inner">coneInnerAngle</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-cone-inner"
+                    id="panner-cone-inner" min="0" max="360" step="10">
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-cone-outer">coneOuterAngle</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-cone-outer"
+                    id="panner-cone-outer" min="0" max="360" step="10">
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-cone-gain">coneOuterGain</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-cone-gain"
+                    id="panner-cone-gain" min="0" max="1" step="0.1">
+            </div>
+        </fieldset>
+        <fieldset class="controls-fieldset controls-fieldset_volume">
+            <legend class="controls-legend">Volume</legend>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-distance-gain">volume distance gain</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-distance-gain"
+                    id="panner-distance-gain" readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-cone-volume-gain">volume cone gain</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-cone-volume-gain"
+                    id="panner-cone-volume-gain" readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-volume-gain">volume total gain</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-volume-gain"
+                    id="panner-volume-gain" readonly>
+            </div>
+        </fieldset>
+    </form>
+    <div class="field"></div>
+    <script src="index.js"></script>
+</body>
+</html>
