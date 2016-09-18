@@ -2,8 +2,8 @@
     --color-red: #ff8989;
     --color-dark-red: #ab1223;
     --color-yellow: #eed653;
-    --color-grey: #eee;
-    --color-dark-grey: #888;
+    --color-grey: #ccc;
+    --color-dark-grey: #444;
 }
 
 html, body {
@@ -52,11 +52,12 @@ body {
     display: inline-block;
     width: 50%;
     margin: 0;
-    padding: 1rem 0 0;
+    padding: 1rem 1rem 1rem 0;
     border: 0;
     vertical-align: top;
+    box-sizing: border-box;
 }
-.controls-fieldset_volume {
+.controls-fieldset_panner {
     display: block;
     width: 100%;
 }
@@ -70,17 +71,23 @@ body {
 .controls-fieldset-row {
     display: flex;
     align-items: center;
-    margin: 0 0 1rem;
+    margin: 0 0 0.6rem;
 }
 .controls-fieldset-row-label {
-    flex: 0 0 60%;
+    flex: 0 0 50%;
 }
-.controls-fieldset-row-input {
-    width: 30%;
+.controls-fieldset-row-input,
+.controls-fieldset-row-select {
+    width: 50%;
     padding: 0.25rem 0.5rem 0.3rem;
     border: 1px solid #fff;
     border-radius: 0.2rem;
     box-sizing: border-box;
+    background-color: #fff;
+}
+.controls-fieldset-row-select {
+    height: 1.5rem;
+    padding: 0;
 }
 .controls-fieldset-row-input:focus {
     border-color: var(--color-dark-red);

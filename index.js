@@ -6,13 +6,29 @@
     document.body.appendChild(loadingScreen);
 
     const fieldNode = document.querySelector('.field');
+
     const state = {
         cursorPosition: null,
-        listenerNodePosition: [0, 40, 0],
-        listenerOrientation: [0, -1, 0],
-        pannerPosition: [0, 0, 0],
-        pannerOrientation: [0, 1, 0],
-        fieldSize: [fieldNode.offsetWidth, fieldNode.offsetHeight, 0]
+        fieldSize: [fieldNode.offsetWidth, fieldNode.offsetHeight, 0],
+        listener: {
+            nodePosition: [0, 40, 0],
+            orientation: [0, -1, 0]
+        },
+        panner: {
+            position: [0, 0, 0],
+            orientation: [0, 1, 0],
+            panningModel: 'HRTF',
+            distanceModel: 'exponential',
+            maxDistance: 500,
+            refDistance: 10,
+            rolloffFactor: 1,
+            coneInnerAngle: 90,
+            coneOuterAngle: 160,
+            coneOuterGain: 0.1
+        },
+        gain: {
+            value: 1
+        }
     };
 
     const KEY_W = 87;
@@ -48,13 +64,6 @@
     const listener = audioCtx.listener;
     const panner = audioCtx.createPanner();
     const gain = audioCtx.createGain();
-    panner.distanceModel = 'exponential';
-    panner.panningModel = 'HRTF';
-    panner.refDistance = 10;
-    panner.rolloffFactor = 1;
-    panner.coneInnerAngle = 90;
-    panner.coneOuterAngle = 160;
-    panner.coneOuterGain = 0.1;
 
     const keyPressed = {
         [KEY_W]: false,
@@ -90,47 +99,72 @@
         });
 
     const formNode = document.controls;
+    formNode['mute'].checked = state.gain.value;
     formNode['panner-x'].min = -Math.floor(state.fieldSize[0] / 2);
     formNode['panner-x'].max = Math.floor(state.fieldSize[0] / 2);
-    formNode['panner-x'].value = state.pannerPosition[0];
+    formNode['panner-x'].value = state.panner.position[0];
     formNode['panner-y'].min = -Math.floor(state.fieldSize[1] / 2);
     formNode['panner-y'].max = Math.floor(state.fieldSize[1] / 2);
-    formNode['panner-y'].value = state.pannerPosition[1];
-    formNode['panner-z'].min = formNode['panner-z'].max = formNode['panner-z'].value = state.pannerPosition[2];
-    formNode['panner-angle'].value = getAngleFromVector(state.pannerOrientation);
-    formNode['panner-cone-inner'].value = panner.coneInnerAngle;
-    formNode['panner-cone-outer'].value = panner.coneOuterAngle;
-    formNode['panner-cone-gain'].value = panner.coneOuterGain;
+    formNode['panner-y'].value = state.panner.position[1];
+    formNode['panner-z'].min = formNode['panner-z'].max = formNode['panner-z'].value = state.panner.position[2];
+    formNode['panner-angle'].value = getAngleFromVector(state.panner.orientation);
+    formNode['panner-cone-inner'].value = state.panner.coneInnerAngle;
+    formNode['panner-cone-outer'].value = state.panner.coneOuterAngle;
+    formNode['panner-cone-gain'].value = state.panner.coneOuterGain;
+    formNode['panner-model'].value = state.panner.panningModel;
+    formNode['panner-distance-model'].value = state.panner.distanceModel;
+    formNode['panner-max-distance'].value = state.panner.maxDistance;
+    formNode['panner-ref-distance'].value = state.panner.refDistance;
+    formNode['panner-rolloff-factor'].value = state.panner.rolloffFactor;
     formNode.addEventListener('input', event => {
         switch (event.target.name) {
             case 'panner-x':
-                state.pannerPosition[0] = event.target.valueAsNumber;
+                state.panner.position[0] = event.target.valueAsNumber;
                 break;
             case 'panner-y':
-                state.pannerPosition[1] = event.target.valueAsNumber;
+                state.panner.position[1] = event.target.valueAsNumber;
                 break;
             case 'panner-z':
-                state.pannerPosition[2] = event.target.valueAsNumber;
+                state.panner.position[2] = event.target.valueAsNumber;
                 break;
             case 'panner-angle':
-                state.pannerOrientation = getVectorFromAngle(event.target.valueAsNumber);
+                state.panner.orientation = getVectorFromAngle(event.target.valueAsNumber);
                 break;
             case 'panner-cone-inner':
-                panner.coneInnerAngle = event.target.valueAsNumber;
+                state.panner.coneInnerAngle = event.target.valueAsNumber;
                 break;
             case 'panner-cone-outer':
-                panner.coneOuterAngle = event.target.valueAsNumber;
+                state.panner.coneOuterAngle = event.target.valueAsNumber;
                 break;
             case 'panner-cone-gain':
-                panner.coneOuterGain = event.target.valueAsNumber;
+                state.panner.coneOuterGain = event.target.valueAsNumber;
+                break;
+            case 'panner-max-distance':
+                state.panner.maxDistance = event.target.valueAsNumber;
+                break;
+            case 'panner-ref-distance':
+                state.panner.refDistance = event.target.valueAsNumber;
+                break;
+            case 'panner-rolloff-factor':
+                state.panner.rolloffFactor = event.target.valueAsNumber;
                 break;
         }
     });
-    formNode.mute.addEventListener('change', event => {
-        if (event.target.checked) {
-            gain.gain.value = 1;
-        } else {
-            gain.gain.value = 0;
+    formNode.addEventListener('change', event => {
+        switch (event.target.name) {
+            case 'mute':
+                if (event.target.checked) {
+                    state.gain.value = 1;
+                } else {
+                    state.gain.value = 0;
+                }
+                break;
+            case 'panner-model':
+                state.panner.panningModel = event.target.value;
+                break;
+            case 'panner-distance-model':
+                state.panner.distanceModel = event.target.value;
+                break;
         }
     });
 
@@ -157,92 +191,112 @@
     function render() {
         window.requestAnimationFrame(render);
 
-        // updating position
+        // listener
         if (keyPressed[KEY_W]) {
             if (keyPressed[KEY_A]) {
-                state.listenerNodePosition[0] -= LISTENER_SPEED * 1.14;
-                state.listenerNodePosition[1] -= LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[0] -= LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[1] -= LISTENER_SPEED * 1.14;
             } else if (keyPressed[KEY_D]) {
-                state.listenerNodePosition[0] += LISTENER_SPEED * 1.14;
-                state.listenerNodePosition[1] -= LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[0] += LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[1] -= LISTENER_SPEED * 1.14;
             } else {
-                state.listenerNodePosition[1] -= LISTENER_SPEED;
+                state.listener.nodePosition[1] -= LISTENER_SPEED;
             }
         } else if (keyPressed[KEY_S]) {
             if (keyPressed[KEY_A]) {
-                state.listenerNodePosition[0] -= LISTENER_SPEED * 1.14;
-                state.listenerNodePosition[1] += LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[0] -= LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[1] += LISTENER_SPEED * 1.14;
             } else if (keyPressed[KEY_D]) {
-                state.listenerNodePosition[0] += LISTENER_SPEED * 1.14;
-                state.listenerNodePosition[1] += LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[0] += LISTENER_SPEED * 1.14;
+                state.listener.nodePosition[1] += LISTENER_SPEED * 1.14;
             } else {
-                state.listenerNodePosition[1] += LISTENER_SPEED;
+                state.listener.nodePosition[1] += LISTENER_SPEED;
             }
         } else if (keyPressed[KEY_A]) {
-            state.listenerNodePosition[0] -= LISTENER_SPEED;
+            state.listener.nodePosition[0] -= LISTENER_SPEED;
         } else if (keyPressed[KEY_D]) {
-            state.listenerNodePosition[0] += LISTENER_SPEED;
+            state.listener.nodePosition[0] += LISTENER_SPEED;
         }
         for (let i = 0; i < 2; i++) {
-            state.listenerNodePosition[i] = Math.min(Math.max(state.listenerNodePosition[i], -state.fieldSize[i] / 2), state.fieldSize[i] / 2);
+            state.listener.nodePosition[i] = Math.min(Math.max(state.listener.nodePosition[i], -state.fieldSize[i] / 2), state.fieldSize[i] / 2);
         }
 
-        // updating orientation
         if (state.cursorPosition) {
-            state.listenerOrientation = [
-                state.cursorPosition[0] - state.listenerNodePosition[0],
-                state.cursorPosition[1] - state.listenerNodePosition[1],
-                state.listenerOrientation[2]
+            state.listener.orientation = [
+                state.cursorPosition[0] - state.listener.nodePosition[0],
+                state.cursorPosition[1] - state.listener.nodePosition[1],
+                state.listener.orientation[2]
             ];
         }
 
-        listenerNode.style.transform = getTransformValue({ position: state.listenerNodePosition });
+        listenerNode.style.transform = getTransformValue({ position: state.listener.nodePosition });
         listenerBodyNode.style.transform = getTransformValue({
-            angle: getAngleFromVector(state.listenerOrientation)
+            angle: getAngleFromVector(state.listener.orientation)
         });
 
-        listener.setOrientation(...state.listenerOrientation, 0, 0, -1);
+        listener.setOrientation(...state.listener.orientation, 0, 0, -1);
         const listenerPosition = [
-            AUDIO_SPACE_RATE * state.listenerNodePosition[0],
-            AUDIO_SPACE_RATE * state.listenerNodePosition[1],
-            AUDIO_SPACE_RATE * state.listenerNodePosition[2]
+            AUDIO_SPACE_RATE * state.listener.nodePosition[0],
+            AUDIO_SPACE_RATE * state.listener.nodePosition[1],
+            AUDIO_SPACE_RATE * state.listener.nodePosition[2]
         ];
         setPosition(listener, ...listenerPosition);
 
-        // linear volume gain
-        // const volumeDistanceGainCoeff = 1 -
-        //     panner.rolloffFactor * (getDistance(listenerPosition, state.pannerPosition) - panner.refDistance) /
-        //     (panner.maxDistance - panner.refDistance);
+        // gain
+        gain.gain.value = state.gain.value;
 
-        // inverse volume gain
-        // const volumeDistanceGainCoeff = panner.refDistance /
-        //     (panner.refDistance + panner.rolloffFactor * (getDistance(listenerPosition, state.pannerPosition) - panner.refDistance));
-
-        // exponential volume gain
-        const volumeDistanceGainCoeff = Math.pow(
-            Math.max(getDistance(listenerPosition, state.pannerPosition), panner.refDistance) / panner.refDistance,
-            -panner.rolloffFactor
-        );
+        // form fields
         formNode['listener-x'].value = Math.round(listenerPosition[0]);
         formNode['listener-y'].value = Math.round(listenerPosition[1]);
         formNode['listener-z'].value = Math.round(listenerPosition[2]);
-        formNode['listener-angle'].value = Math.round(getAngleFromVector(state.listenerOrientation));
+        formNode['listener-angle'].value = Math.round(getAngleFromVector(state.listener.orientation));
+
+        let volumeDistanceGainCoeff;
+        switch (state.panner.distanceModel) {
+            case 'linear':
+                volumeDistanceGainCoeff = volumeGainLinear(listenerPosition, state);
+                break;
+            case 'inverse':
+                volumeDistanceGainCoeff = volumeGainInverse(listenerPosition, state);
+                break;
+            case 'exponential':
+                volumeDistanceGainCoeff = volumeGainExponential(listenerPosition, state);
+                break;
+        }
         formNode['panner-distance-gain'].value = volumeDistanceGainCoeff;
-        formNode['panner-cone-volume-gain'].value = getConeGain(listenerPosition, panner, state.pannerPosition, state.pannerOrientation);
-        formNode['panner-volume-gain'].value = formNode['panner-distance-gain'].valueAsNumber *
-            formNode['panner-cone-volume-gain'].valueAsNumber;
 
-        panner.setOrientation(...state.pannerOrientation);
-        pannerConeInnerNode.style.setProperty('--cone-angle-left', `-${panner.coneInnerAngle / 2}deg`, '');
-        pannerConeInnerNode.style.setProperty('--cone-angle-right', `${panner.coneInnerAngle / 2}deg`, '');
-        pannerConeOuterNode.style.setProperty('--cone-angle-left', `-${panner.coneOuterAngle / 2}deg`, '');
-        pannerConeOuterNode.style.setProperty('--cone-angle-right', `${panner.coneOuterAngle / 2}deg`, '');
-        setPosition(panner, ...state.pannerPosition);
+        const volumeConeGainCoeff = getConeGain(listenerPosition, state);
+        formNode['panner-cone-volume-gain'].value = volumeConeGainCoeff;
+        formNode['panner-volume-gain'].value = volumeDistanceGainCoeff * volumeConeGainCoeff;
 
-        pannerNode.style.transform = getTransformValue({ position: state.pannerPosition });
+        if (state.panner.distanceModel === 'linear') {
+            formNode['panner-max-distance'].removeAttribute('readonly');
+        } else {
+            formNode['panner-max-distance'].setAttribute('readonly', 'readonly');
+        }
+
+        // panner
+        panner.panningModel = state.panner.panningModel;
+        panner.distanceModel = state.panner.distanceModel;
+        panner.maxDistance = state.panner.maxDistance;
+        panner.refDistance = state.panner.refDistance;
+        panner.rolloffFactor = state.panner.rolloffFactor;
+        panner.coneInnerAngle = state.panner.coneInnerAngle;
+        panner.coneOuterAngle = state.panner.coneOuterAngle;
+        panner.coneOuterGain = state.panner.coneOuterGain;
+
+        panner.setOrientation(...state.panner.orientation);
         pannerBodyNode.style.transform = getTransformValue({
-            angle: getAngleFromVector(state.pannerOrientation)
+            angle: getAngleFromVector(state.panner.orientation)
         });
+
+        setPosition(panner, ...state.panner.position);
+        pannerNode.style.transform = getTransformValue({ position: state.panner.position });
+
+        pannerConeInnerNode.style.setProperty('--cone-angle-left', `-${state.panner.coneInnerAngle / 2}deg`, '');
+        pannerConeInnerNode.style.setProperty('--cone-angle-right', `${state.panner.coneInnerAngle / 2}deg`, '');
+        pannerConeOuterNode.style.setProperty('--cone-angle-left', `-${state.panner.coneOuterAngle / 2}deg`, '');
+        pannerConeOuterNode.style.setProperty('--cone-angle-right', `${state.panner.coneOuterAngle / 2}deg`, '');
     }
 
     function getTransformValue({ position, angle }) {
@@ -272,11 +326,32 @@
         return [Math.cos(angle), Math.sin(angle), 0];
     }
 
-    function getConeGain(listenerPosition, panner, pannerPosition, pannerOrientation) {
-        const pannerAngle = getAngleFromVector(pannerOrientation);
+    function volumeGainLinear(listenerPosition) {
+        return 1 -
+            state.panner.rolloffFactor * (getDistance(listenerPosition, state.panner.position) - state.panner.refDistance) /
+            (state.panner.maxDistance - state.panner.refDistance);
+    }
+
+    function volumeGainInverse(listenerPosition) {
+        return state.panner.refDistance /
+            (
+                state.panner.refDistance +
+                state.panner.rolloffFactor * (getDistance(listenerPosition, state.panner.position) - state.panner.refDistance)
+            );
+    }
+
+    function volumeGainExponential(listenerPosition) {
+        return Math.pow(
+            Math.max(getDistance(listenerPosition, state.panner.position), state.panner.refDistance) / state.panner.refDistance,
+            -state.panner.rolloffFactor
+        );
+    }
+
+    function getConeGain(listenerPosition) {
+        const pannerAngle = getAngleFromVector(state.panner.orientation);
         let listenerRelativeAngle = getAngleFromVector([
-            listenerPosition[0] - pannerPosition[0],
-            listenerPosition[1] - pannerPosition[1]
+            listenerPosition[0] - state.panner.position[0],
+            listenerPosition[1] - state.panner.position[1]
         ]) - pannerAngle;
         if (listenerRelativeAngle > 180) {
             listenerRelativeAngle = 360 - listenerRelativeAngle;
@@ -284,13 +359,13 @@
             listenerRelativeAngle = 360 + listenerRelativeAngle;
         }
         listenerRelativeAngle = Math.abs(listenerRelativeAngle);
-        if (listenerRelativeAngle < panner.coneInnerAngle / 2) {
+        if (listenerRelativeAngle < state.panner.coneInnerAngle / 2) {
             return 1;
-        } else if (listenerRelativeAngle > panner.coneOuterAngle / 2) {
-            return panner.coneOuterGain;
+        } else if (listenerRelativeAngle > state.panner.coneOuterAngle / 2) {
+            return state.panner.coneOuterGain;
         } else {
-            return 1 - (1 - panner.coneOuterGain) *
-                (2 * listenerRelativeAngle - panner.coneInnerAngle) / (panner.coneOuterAngle - panner.coneInnerAngle);
+            return 1 - (1 - state.panner.coneOuterGain) *
+                (2 * listenerRelativeAngle - state.panner.coneInnerAngle) / (state.panner.coneOuterAngle - state.panner.coneInnerAngle);
         }
     }
 })();

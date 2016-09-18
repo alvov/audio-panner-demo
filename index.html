@@ -8,7 +8,7 @@
 <body>
     <form class="controls" name="controls">
         <label class="controls-sound">
-            <input type="checkbox" name="mute" class="controls-sound-input" checked>
+            <input type="checkbox" name="mute" class="controls-sound-input">
             <span class="controls-sound-icon"></span>
         </label>
         <h1 class="controls-title">Audio panner demo</h1>
@@ -36,6 +36,24 @@
             </div>
         </fieldset><!--
         --><fieldset class="controls-fieldset">
+            <legend class="controls-legend">Volume gains</legend>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-distance-gain">distance</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-distance-gain"
+                    id="panner-distance-gain" readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-cone-volume-gain">cone</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-cone-volume-gain"
+                    id="panner-cone-volume-gain" readonly>
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-volume-gain">total</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-volume-gain"
+                    id="panner-volume-gain" readonly>
+            </div>
+        </fieldset>
+        <fieldset class="controls-fieldset controls-fieldset_panner">
             <legend class="controls-legend">Panner</legend>
             <div class="controls-fieldset-row">
                 <label class="controls-fieldset-row-label" for="panner-x">positionX</label>
@@ -69,23 +87,35 @@
                 <input class="controls-fieldset-row-input" type="number" name="panner-cone-gain"
                     id="panner-cone-gain" min="0" max="1" step="0.1">
             </div>
-        </fieldset>
-        <fieldset class="controls-fieldset controls-fieldset_volume">
-            <legend class="controls-legend">Volume</legend>
             <div class="controls-fieldset-row">
-                <label class="controls-fieldset-row-label" for="panner-distance-gain">volume distance gain</label>
-                <input class="controls-fieldset-row-input" type="number" name="panner-distance-gain"
-                    id="panner-distance-gain" readonly>
+                <label class="controls-fieldset-row-label" for="panner-model">panning model</label>
+                <select class="controls-fieldset-row-select" name="panner-model" id="panner-model">
+                    <option value="HRTF">HRTF</option>
+                    <option value="equalpower">equalpower</option>
+                </select>
             </div>
             <div class="controls-fieldset-row">
-                <label class="controls-fieldset-row-label" for="panner-cone-volume-gain">volume cone gain</label>
-                <input class="controls-fieldset-row-input" type="number" name="panner-cone-volume-gain"
-                    id="panner-cone-volume-gain" readonly>
+                <label class="controls-fieldset-row-label" for="panner-distance-model">distance model</label>
+                <select class="controls-fieldset-row-select" name="panner-distance-model" id="panner-distance-model">
+                    <option value="linear">linear</option>
+                    <option value="inverse">inverse</option>
+                    <option value="exponential">exponential</option>
+                </select>
             </div>
             <div class="controls-fieldset-row">
-                <label class="controls-fieldset-row-label" for="panner-volume-gain">volume total gain</label>
-                <input class="controls-fieldset-row-input" type="number" name="panner-volume-gain"
-                    id="panner-volume-gain" readonly>
+                <label class="controls-fieldset-row-label" for="panner-ref-distance">refDistance</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-ref-distance"
+                    id="panner-ref-distance" min="0">
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-max-distance">maxDistance</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-max-distance"
+                    id="panner-max-distance" min="0">
+            </div>
+            <div class="controls-fieldset-row">
+                <label class="controls-fieldset-row-label" for="panner-rolloff-factor">rolloffFactor</label>
+                <input class="controls-fieldset-row-input" type="number" name="panner-rolloff-factor"
+                    id="panner-rolloff-factor" step="0.1">
             </div>
         </fieldset>
     </form>
