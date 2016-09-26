@@ -1,10 +1,7 @@
 (function() {
     'use strict';
 
-    const loadingScreen = document.createElement('div');
-    loadingScreen.className = 'loading';
-    document.body.appendChild(loadingScreen);
-
+    const loadingScreenNode = document.querySelector('.loading');
     const fieldNode = document.querySelector('.field');
 
     const state = {
@@ -20,7 +17,7 @@
             panningModel: 'HRTF',
             distanceModel: 'exponential',
             maxDistance: 500,
-            refDistance: 10,
+            refDistance: 20,
             rolloffFactor: 1,
             coneInnerAngle: 90,
             coneOuterAngle: 160,
@@ -30,15 +27,19 @@
             value: 1
         }
     };
+    updateFieldSize(state);
 
     const KEY_W = 87;
     const KEY_S = 83;
     const KEY_A = 65;
     const KEY_D = 68;
-    const LISTENER_SPEED = 1.5;
+    const KEY_UP = 38;
+    const KEY_DOWN = 40;
+    const KEY_LEFT = 37;
+    const KEY_RIGHT = 39;
 
-    const fieldDiagonal = Math.sqrt(state.fieldSize.reduce((sum, current) => sum + Math.pow(current, 2)));
-    const AUDIO_SPACE_RATE = 1000 < fieldDiagonal ? 1000 / fieldDiagonal : 1;
+    const LISTENER_SPEED = 1.5;
+    const AUDIO_SPACE_RATE = 1000 < state.fieldDiagonal ? 1000 / state.fieldDiagonal : 1;
 
     const listenerNode = document.createElement('div');
     listenerNode.className = 'object object_listener';
@@ -50,12 +51,15 @@
     pannerNode.className = 'object object_panner';
     const pannerBodyNode = document.createElement('div');
     pannerBodyNode.className = 'object-body';
-    const pannerConeInnerNode = document.createElement('div');
-    pannerConeInnerNode.className = 'object-body-cone object-body-cone_inner';
-    pannerBodyNode.appendChild(pannerConeInnerNode);
-    const pannerConeOuterNode = document.createElement('div');
-    pannerConeOuterNode.className = 'object-body-cone object-body-cone_outer';
-    pannerBodyNode.appendChild(pannerConeOuterNode);
+    const pannerConeRightNode = document.createElement('div');
+    pannerConeRightNode.className = 'object-body-cone object-body-cone_right';
+    pannerBodyNode.appendChild(pannerConeRightNode);
+    const pannerConeLeftNode = document.createElement('div');
+    pannerConeLeftNode.className = 'object-body-cone object-body-cone_left';
+    pannerBodyNode.appendChild(pannerConeLeftNode);
+    const pannerRefDistanceNode = document.createElement('div');
+    pannerRefDistanceNode.className = 'object-ref-distance';
+    pannerBodyNode.appendChild(pannerRefDistanceNode);
     pannerNode.appendChild(pannerBodyNode);
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -69,7 +73,11 @@
         [KEY_W]: false,
         [KEY_S]: false,
         [KEY_A]: false,
-        [KEY_D]: false
+        [KEY_D]: false,
+        [KEY_UP]: false,
+        [KEY_DOWN]: false,
+        [KEY_LEFT]: false,
+        [KEY_RIGHT]: false
     };
 
     fetch('0948.ogg')
@@ -94,7 +102,7 @@
             render();
             fieldNode.appendChild(pannerNode);
             fieldNode.appendChild(listenerNode);
-            loadingScreen.remove();
+            loadingScreenNode.remove();
             audioSource.start(0);
         });
 
@@ -192,29 +200,29 @@
         window.requestAnimationFrame(render);
 
         // listener
-        if (keyPressed[KEY_W]) {
-            if (keyPressed[KEY_A]) {
+        if (keyPressed[KEY_W] || keyPressed[KEY_UP]) {
+            if (keyPressed[KEY_A] || keyPressed[KEY_LEFT]) {
                 state.listener.nodePosition[0] -= LISTENER_SPEED * 1.14;
                 state.listener.nodePosition[1] -= LISTENER_SPEED * 1.14;
-            } else if (keyPressed[KEY_D]) {
+            } else if (keyPressed[KEY_D] || keyPressed[KEY_RIGHT]) {
                 state.listener.nodePosition[0] += LISTENER_SPEED * 1.14;
                 state.listener.nodePosition[1] -= LISTENER_SPEED * 1.14;
             } else {
                 state.listener.nodePosition[1] -= LISTENER_SPEED;
             }
-        } else if (keyPressed[KEY_S]) {
-            if (keyPressed[KEY_A]) {
+        } else if (keyPressed[KEY_S] || keyPressed[KEY_DOWN]) {
+            if (keyPressed[KEY_A] || keyPressed[KEY_LEFT]) {
                 state.listener.nodePosition[0] -= LISTENER_SPEED * 1.14;
                 state.listener.nodePosition[1] += LISTENER_SPEED * 1.14;
-            } else if (keyPressed[KEY_D]) {
+            } else if (keyPressed[KEY_D] || keyPressed[KEY_RIGHT]) {
                 state.listener.nodePosition[0] += LISTENER_SPEED * 1.14;
                 state.listener.nodePosition[1] += LISTENER_SPEED * 1.14;
             } else {
                 state.listener.nodePosition[1] += LISTENER_SPEED;
             }
-        } else if (keyPressed[KEY_A]) {
+        } else if (keyPressed[KEY_A] || keyPressed[KEY_LEFT]) {
             state.listener.nodePosition[0] -= LISTENER_SPEED;
-        } else if (keyPressed[KEY_D]) {
+        } else if (keyPressed[KEY_D] || keyPressed[KEY_RIGHT]) {
             state.listener.nodePosition[0] += LISTENER_SPEED;
         }
         for (let i = 0; i < 2; i++) {
@@ -293,10 +301,13 @@
         setPosition(panner, ...state.panner.position);
         pannerNode.style.transform = getTransformValue({ position: state.panner.position });
 
-        pannerConeInnerNode.style.setProperty('--cone-angle-left', `-${state.panner.coneInnerAngle / 2}deg`, '');
-        pannerConeInnerNode.style.setProperty('--cone-angle-right', `${state.panner.coneInnerAngle / 2}deg`, '');
-        pannerConeOuterNode.style.setProperty('--cone-angle-left', `-${state.panner.coneOuterAngle / 2}deg`, '');
-        pannerConeOuterNode.style.setProperty('--cone-angle-right', `${state.panner.coneOuterAngle / 2}deg`, '');
+        pannerConeRightNode.style.setProperty('--cone-angle-inner', `${state.panner.coneInnerAngle / 2}deg`, '');
+        pannerConeRightNode.style.setProperty('--cone-angle-outer', `${state.panner.coneOuterAngle / 2}deg`, '');
+        pannerConeLeftNode.style.setProperty('--cone-angle-inner', `-${state.panner.coneInnerAngle / 2}deg`, '');
+        pannerConeLeftNode.style.setProperty('--cone-angle-outer', `-${state.panner.coneOuterAngle / 2}deg`, '');
+        pannerNode.style.setProperty('--cone-length', `${state.fieldDiagonal}px`, '');
+
+        pannerRefDistanceNode.style.setProperty('--ref-distance', `${state.panner.refDistance}px`, '');
     }
 
     function getTransformValue({ position, angle }) {
@@ -367,5 +378,10 @@
             return 1 - (1 - state.panner.coneOuterGain) *
                 (2 * listenerRelativeAngle - state.panner.coneInnerAngle) / (state.panner.coneOuterAngle - state.panner.coneInnerAngle);
         }
+    }
+
+    function updateFieldSize(state) {
+        state.fieldSize = [fieldNode.offsetWidth, fieldNode.offsetHeight, 0];
+        state.fieldDiagonal = Math.sqrt(state.fieldSize.reduce((sum, current) => sum + Math.pow(current, 2), 0));
     }
 })();
