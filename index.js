@@ -3,6 +3,8 @@
 
     const loadingScreenNode = document.querySelector('.loading');
     const fieldNode = document.querySelector('.field');
+    const listenerNode = document.querySelector('.object_listener');
+    const pannerNode = document.querySelector('.object_panner');
 
     const state = {
         cursorPosition: null,
@@ -38,29 +40,9 @@
     const KEY_LEFT = 37;
     const KEY_RIGHT = 39;
 
+    const CLASS_HIDDEN = 'hidden';
     const LISTENER_SPEED = 1.5;
     const AUDIO_SPACE_RATE = 1000 < state.fieldDiagonal ? 1000 / state.fieldDiagonal : 1;
-
-    const listenerNode = document.createElement('div');
-    listenerNode.className = 'object object_listener';
-    const listenerBodyNode = document.createElement('div');
-    listenerBodyNode.className = 'object-body';
-    listenerNode.appendChild(listenerBodyNode);
-
-    const pannerNode = document.createElement('div');
-    pannerNode.className = 'object object_panner';
-    const pannerBodyNode = document.createElement('div');
-    pannerBodyNode.className = 'object-body';
-    const pannerConeRightNode = document.createElement('div');
-    pannerConeRightNode.className = 'object-body-cone object-body-cone_right';
-    pannerBodyNode.appendChild(pannerConeRightNode);
-    const pannerConeLeftNode = document.createElement('div');
-    pannerConeLeftNode.className = 'object-body-cone object-body-cone_left';
-    pannerBodyNode.appendChild(pannerConeLeftNode);
-    const pannerRefDistanceNode = document.createElement('div');
-    pannerRefDistanceNode.className = 'object-ref-distance';
-    pannerBodyNode.appendChild(pannerRefDistanceNode);
-    pannerNode.appendChild(pannerBodyNode);
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
@@ -100,8 +82,8 @@
         })
         .then(() => {
             render();
-            fieldNode.appendChild(pannerNode);
-            fieldNode.appendChild(listenerNode);
+            pannerNode.classList.remove(CLASS_HIDDEN);
+            listenerNode.classList.remove(CLASS_HIDDEN);
             loadingScreenNode.remove();
             audioSource.start(0);
         });
@@ -237,11 +219,6 @@
             ];
         }
 
-        listenerNode.style.transform = getTransformValue({ position: state.listener.nodePosition });
-        listenerBodyNode.style.transform = getTransformValue({
-            angle: getAngleFromVector(state.listener.orientation)
-        });
-
         listener.setOrientation(...state.listener.orientation, 0, 0, -1);
         const listenerPosition = [
             AUDIO_SPACE_RATE * state.listener.nodePosition[0],
@@ -249,6 +226,11 @@
             AUDIO_SPACE_RATE * state.listener.nodePosition[2]
         ];
         setPosition(listener, ...listenerPosition);
+
+        listenerNode.style.transform = getTransformValue({
+            position: state.listener.nodePosition,
+            angle: getAngleFromVector(state.listener.orientation)
+        });
 
         // gain
         gain.gain.value = state.gain.value;
@@ -294,20 +276,16 @@
         panner.coneOuterGain = state.panner.coneOuterGain;
 
         panner.setOrientation(...state.panner.orientation);
-        pannerBodyNode.style.transform = getTransformValue({
+        setPosition(panner, ...state.panner.position);
+
+        pannerNode.style.transform = getTransformValue({
+            position: state.panner.position,
             angle: getAngleFromVector(state.panner.orientation)
         });
-
-        setPosition(panner, ...state.panner.position);
-        pannerNode.style.transform = getTransformValue({ position: state.panner.position });
-
-        pannerConeRightNode.style.setProperty('--cone-angle-inner', `${state.panner.coneInnerAngle / 2}deg`, '');
-        pannerConeRightNode.style.setProperty('--cone-angle-outer', `${state.panner.coneOuterAngle / 2}deg`, '');
-        pannerConeLeftNode.style.setProperty('--cone-angle-inner', `-${state.panner.coneInnerAngle / 2}deg`, '');
-        pannerConeLeftNode.style.setProperty('--cone-angle-outer', `-${state.panner.coneOuterAngle / 2}deg`, '');
+        pannerNode.style.setProperty('--cone-angle-inner', `${state.panner.coneInnerAngle / 2}deg`, '');
+        pannerNode.style.setProperty('--cone-angle-outer', `${state.panner.coneOuterAngle / 2}deg`, '');
         pannerNode.style.setProperty('--cone-length', `${state.fieldDiagonal}px`, '');
-
-        pannerRefDistanceNode.style.setProperty('--ref-distance', `${state.panner.refDistance}px`, '');
+        pannerNode.style.setProperty('--ref-distance', `${state.panner.refDistance}px`, '');
     }
 
     function getTransformValue({ position, angle }) {

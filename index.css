@@ -25,6 +25,10 @@ body {
     font: 16px/1.4 'Arial Narrow', Arial, sans-serif;
 }
 
+.hidden {
+    display: none;
+}
+
 /* loading screen */
 .loading {
     position: absolute;
@@ -141,12 +145,10 @@ body {
     --size: var(--listener-size);
 }
 .object_panner {
-    --size: calc(0.8 * var(--listener-size))
-}
-.object_panner .object-body {
+    --size: calc(0.8 * var(--listener-size));
     color: var(--color-dark-red);
 }
-.object-body::before {
+.object::before {
     content: '→';
     position: absolute;
     width: var(--size);
@@ -161,46 +163,32 @@ body {
     line-height: calc(0.9 * var(--size));
     z-index: 1;
 }
-.object-body-cone {
+.object-cone {
     position: absolute;
+    top: 0;
     left: calc(0px - var(--cone-length));
     width: calc(2 * var(--cone-length));
     height: var(--cone-length);
     overflow: hidden;
 }
-.object-body-cone_right {
-    top: 0;
+.object-cone_left {
+    transform-origin: 50% 0;
+    transform: rotateX(180deg);
 }
-.object-body-cone_left {
-    bottom: 0;
-}
-.object-body-cone::before,
-.object-body-cone::after {
+.object-cone::before,
+.object-cone::after {
     content: '';
     position: absolute;
     width: 100%;
     height: var(--cone-length);
-}
-.object-body-cone::before {
-    background-color: var(--color-grey);
-}
-.object-body-cone::after {
-    background-color: var(--color-dark-grey);
-}
-.object-body-cone_right::before,
-.object-body-cone_right::after {
     transform-origin: 50% 0;
 }
-.object-body-cone_left::before,
-.object-body-cone_left::after {
-    transform-origin: 50% 100%;
-}
-.object-body-cone_left::before,
-.object-body-cone_right::before {
+.object-cone::before {
+    background-color: var(--color-grey);
     transform: rotateZ(var(--cone-angle-inner));
 }
-.object-body-cone_left::after,
-.object-body-cone_right::after {
+.object-cone::after {
+    background-color: var(--color-dark-grey);
     transform: rotateZ(var(--cone-angle-outer));
 }
 .object-ref-distance {
