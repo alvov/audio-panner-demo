@@ -10,12 +10,12 @@
         cursorPosition: null,
         fieldSize: [fieldNode.offsetWidth, fieldNode.offsetHeight, 0],
         listener: {
-            nodePosition: [0, 40, 0],
-            orientation: [0, -1, 0]
+            position: [0, -40, 0],
+            orientation: [0, 1, 0]
         },
         panner: {
             position: [0, 0, 0],
-            orientation: [0, 1, 0],
+            orientation: [0, -1, 0],
             panningModel: 'HRTF',
             distanceModel: 'exponential',
             maxDistance: 500,
@@ -29,7 +29,7 @@
             value: 1
         }
     };
-    updateFieldSize(state);
+    updateFieldSize();
 
     const KEY_W = 87;
     const KEY_S = 83;
@@ -41,8 +41,10 @@
     const KEY_RIGHT = 39;
 
     const CLASS_HIDDEN = 'hidden';
+
+    const SQUARE_OF_2 = 1.14;
     const LISTENER_SPEED = 1.5;
-    const AUDIO_SPACE_RATE = 1000 < state.fieldDiagonal ? 1000 / state.fieldDiagonal : 1;
+    const LISTENER_DIAGONAL_SPEED = LISTENER_SPEED / SQUARE_OF_2;
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
@@ -178,57 +180,59 @@
         state.fieldSize = [fieldNode.offsetWidth, fieldNode.offsetHeight, 0];
     });
 
+    /**
+     * Does the whole rendering in a loop
+     */
     function render() {
         window.requestAnimationFrame(render);
 
         // listener
         if (keyPressed[KEY_W] || keyPressed[KEY_UP]) {
             if (keyPressed[KEY_A] || keyPressed[KEY_LEFT]) {
-                state.listener.nodePosition[0] -= LISTENER_SPEED * 1.14;
-                state.listener.nodePosition[1] -= LISTENER_SPEED * 1.14;
+                state.listener.position[0] -= LISTENER_DIAGONAL_SPEED;
+                state.listener.position[1] += LISTENER_DIAGONAL_SPEED;
             } else if (keyPressed[KEY_D] || keyPressed[KEY_RIGHT]) {
-                state.listener.nodePosition[0] += LISTENER_SPEED * 1.14;
-                state.listener.nodePosition[1] -= LISTENER_SPEED * 1.14;
+                state.listener.position[0] += LISTENER_DIAGONAL_SPEED;
+                state.listener.position[1] += LISTENER_DIAGONAL_SPEED;
             } else {
-                state.listener.nodePosition[1] -= LISTENER_SPEED;
+                state.listener.position[1] += LISTENER_SPEED;
             }
         } else if (keyPressed[KEY_S] || keyPressed[KEY_DOWN]) {
             if (keyPressed[KEY_A] || keyPressed[KEY_LEFT]) {
-                state.listener.nodePosition[0] -= LISTENER_SPEED * 1.14;
-                state.listener.nodePosition[1] += LISTENER_SPEED * 1.14;
+                state.listener.position[0] -= LISTENER_DIAGONAL_SPEED;
+                state.listener.position[1] -= LISTENER_DIAGONAL_SPEED;
             } else if (keyPressed[KEY_D] || keyPressed[KEY_RIGHT]) {
-                state.listener.nodePosition[0] += LISTENER_SPEED * 1.14;
-                state.listener.nodePosition[1] += LISTENER_SPEED * 1.14;
+                state.listener.position[0] += LISTENER_DIAGONAL_SPEED;
+                state.listener.position[1] -= LISTENER_DIAGONAL_SPEED;
             } else {
-                state.listener.nodePosition[1] += LISTENER_SPEED;
+                state.listener.position[1] -= LISTENER_SPEED;
             }
         } else if (keyPressed[KEY_A] || keyPressed[KEY_LEFT]) {
-            state.listener.nodePosition[0] -= LISTENER_SPEED;
+            state.listener.position[0] -= LISTENER_SPEED;
         } else if (keyPressed[KEY_D] || keyPressed[KEY_RIGHT]) {
-            state.listener.nodePosition[0] += LISTENER_SPEED;
+            state.listener.position[0] += LISTENER_SPEED;
         }
         for (let i = 0; i < 2; i++) {
-            state.listener.nodePosition[i] = Math.min(Math.max(state.listener.nodePosition[i], -state.fieldSize[i] / 2), state.fieldSize[i] / 2);
+            state.listener.position[i] = Math.min(
+                Math.max(state.listener.position[i], -state.fieldSize[i] / 2),
+                state.fieldSize[i] / 2
+            );
         }
+        setPosition(listener, ...state.listener.position);
 
+        // orientation
         if (state.cursorPosition) {
             state.listener.orientation = [
-                state.cursorPosition[0] - state.listener.nodePosition[0],
-                state.cursorPosition[1] - state.listener.nodePosition[1],
+                state.cursorPosition[0] - state.listener.position[0],
+                -state.cursorPosition[1] - state.listener.position[1],
                 state.listener.orientation[2]
             ];
         }
 
-        listener.setOrientation(...state.listener.orientation, 0, 0, -1);
-        const listenerPosition = [
-            AUDIO_SPACE_RATE * state.listener.nodePosition[0],
-            AUDIO_SPACE_RATE * state.listener.nodePosition[1],
-            AUDIO_SPACE_RATE * state.listener.nodePosition[2]
-        ];
-        setPosition(listener, ...listenerPosition);
+        listener.setOrientation(...state.listener.orientation, 0, 0, 1);
 
         listenerNode.style.transform = getTransformValue({
-            position: state.listener.nodePosition,
+            position: [state.listener.position[0], -state.listener.position[1]],
             angle: getAngleFromVector(state.listener.orientation)
         });
 
@@ -236,26 +240,26 @@
         gain.gain.value = state.gain.value;
 
         // form fields
-        formNode['listener-x'].value = Math.round(listenerPosition[0]);
-        formNode['listener-y'].value = Math.round(listenerPosition[1]);
-        formNode['listener-z'].value = Math.round(listenerPosition[2]);
+        formNode['listener-x'].value = Math.round(state.listener.position[0]);
+        formNode['listener-y'].value = Math.round(state.listener.position[1]);
+        formNode['listener-z'].value = Math.round(state.listener.position[2]);
         formNode['listener-angle'].value = Math.round(getAngleFromVector(state.listener.orientation));
 
         let volumeDistanceGainCoeff;
         switch (state.panner.distanceModel) {
             case 'linear':
-                volumeDistanceGainCoeff = volumeGainLinear(listenerPosition, state);
+                volumeDistanceGainCoeff = volumeGainLinear();
                 break;
             case 'inverse':
-                volumeDistanceGainCoeff = volumeGainInverse(listenerPosition, state);
+                volumeDistanceGainCoeff = volumeGainInverse();
                 break;
             case 'exponential':
-                volumeDistanceGainCoeff = volumeGainExponential(listenerPosition, state);
+                volumeDistanceGainCoeff = volumeGainExponential();
                 break;
         }
         formNode['panner-distance-gain'].value = volumeDistanceGainCoeff;
 
-        const volumeConeGainCoeff = getConeGain(listenerPosition, state);
+        const volumeConeGainCoeff = getConeGain();
         formNode['panner-cone-volume-gain'].value = volumeConeGainCoeff;
         formNode['panner-volume-gain'].value = volumeDistanceGainCoeff * volumeConeGainCoeff;
 
@@ -279,7 +283,7 @@
         setPosition(panner, ...state.panner.position);
 
         pannerNode.style.transform = getTransformValue({
-            position: state.panner.position,
+            position: [state.panner.position[0], -state.panner.position[1]],
             angle: getAngleFromVector(state.panner.orientation)
         });
         pannerNode.style.setProperty('--cone-angle-inner', `${state.panner.coneInnerAngle / 2}deg`, '');
@@ -288,14 +292,33 @@
         pannerNode.style.setProperty('--ref-distance', `${state.panner.refDistance}px`, '');
     }
 
+    /**
+     * Returns value form `transform` property for given position and angle
+     * @param {number[]} position
+     * @param {number} angle
+     * @returns {string}
+     */
     function getTransformValue({ position, angle }) {
         return `${position ? `translate(${position[0]}px, ${position[1]}px)` : ``} ${ angle ? `rotateZ(${angle}deg)` : `` }`.trim();
     }
 
-    function getDistance(v1, v2) {
-        return Math.sqrt(Math.pow(v1[0] - v2[0], 2) + Math.pow(v1[1] - v2[1], 2));
+    /**
+     * Returns the distance between two points
+     * @param {number[]} p1
+     * @param {number[]} p2
+     * @returns {number}
+     */
+    function getDistance(p1, p2) {
+        return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
     }
 
+    /**
+     * Sets the panner/listener position
+     * @param {Object} obj
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
     function setPosition(obj, x, y, z) {
         if (obj.setPosition) {
             obj.setPosition(x, y, z);
@@ -306,41 +329,69 @@
         }
     }
 
+    /**
+     * Returns the angle in degrees for the correspondent vector
+     * It changes the sign of the angle value, because css coordinate system is mirrored relative to panner's
+     * coordinate system
+     * @param {number[]} v
+     * @returns {number}
+     */
     function getAngleFromVector(v) {
-        return (v[0] < 0 ? 180 : 0) + 180 * Math.atan(v[1] / v[0]) / Math.PI;
+        return -((v[0] < 0 ? 180 : 0) + 180 * Math.atan(v[1] / v[0]) / Math.PI);
     }
 
+    /**
+     * Returns a normalized vector for the correspondent angle in degrees
+     * @param {number} angle
+     * @returns {number[]}
+     */
     function getVectorFromAngle(angle) {
         angle = angle * Math.PI / 180;
         return [Math.cos(angle), Math.sin(angle), 0];
     }
 
-    function volumeGainLinear(listenerPosition) {
+    /**
+     * Returns the value of volume gain for linear function
+     * @returns {number}
+     */
+    function volumeGainLinear() {
         return 1 -
-            state.panner.rolloffFactor * (getDistance(listenerPosition, state.panner.position) - state.panner.refDistance) /
+            state.panner.rolloffFactor * (getDistance(state.listener.position, state.panner.position) - state.panner.refDistance) /
             (state.panner.maxDistance - state.panner.refDistance);
     }
 
-    function volumeGainInverse(listenerPosition) {
+    /**
+     * Returns the value of volume gain for inverse function
+     * @returns {number}
+     */
+    function volumeGainInverse() {
         return state.panner.refDistance /
             (
                 state.panner.refDistance +
-                state.panner.rolloffFactor * (getDistance(listenerPosition, state.panner.position) - state.panner.refDistance)
+                state.panner.rolloffFactor * (getDistance(state.listener.position, state.panner.position) - state.panner.refDistance)
             );
     }
 
-    function volumeGainExponential(listenerPosition) {
+    /**
+     * Returns the value of volume gain for exponential function
+     * @returns {number}
+     */
+    function volumeGainExponential() {
         return Math.pow(
-            Math.max(getDistance(listenerPosition, state.panner.position), state.panner.refDistance) / state.panner.refDistance,
+            Math.max(getDistance(state.listener.position, state.panner.position), state.panner.refDistance) / state.panner.refDistance,
             -state.panner.rolloffFactor
         );
     }
 
-    function getConeGain(listenerPosition) {
+    /**
+     * Returns the value of volume gain computed for panner's inner and outer cones
+     * @returns {number}
+     */
+    function getConeGain() {
         const pannerAngle = getAngleFromVector(state.panner.orientation);
         let listenerRelativeAngle = getAngleFromVector([
-            listenerPosition[0] - state.panner.position[0],
-            listenerPosition[1] - state.panner.position[1]
+            state.listener.position[0] - state.panner.position[0],
+            state.listener.position[1] - state.panner.position[1]
         ]) - pannerAngle;
         if (listenerRelativeAngle > 180) {
             listenerRelativeAngle = 360 - listenerRelativeAngle;
@@ -358,7 +409,10 @@
         }
     }
 
-    function updateFieldSize(state) {
+    /**
+     * Fills the state with actual field sizes
+     */
+    function updateFieldSize() {
         state.fieldSize = [fieldNode.offsetWidth, fieldNode.offsetHeight, 0];
         state.fieldDiagonal = Math.sqrt(state.fieldSize.reduce((sum, current) => sum + Math.pow(current, 2), 0));
     }
