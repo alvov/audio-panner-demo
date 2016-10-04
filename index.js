@@ -356,7 +356,16 @@
      */
     function volumeGainLinear() {
         return 1 -
-            state.panner.rolloffFactor * (getDistance(state.listener.position, state.panner.position) - state.panner.refDistance) /
+            state.panner.rolloffFactor *
+            (
+                Math.max(
+                    Math.min(
+                        getDistance(state.listener.position, state.panner.position),
+                        state.panner.maxDistance
+                    ),
+                    state.panner.refDistance
+                ) - state.panner.refDistance
+            ) /
             (state.panner.maxDistance - state.panner.refDistance);
     }
 
@@ -368,7 +377,11 @@
         return state.panner.refDistance /
             (
                 state.panner.refDistance +
-                state.panner.rolloffFactor * (getDistance(state.listener.position, state.panner.position) - state.panner.refDistance)
+                state.panner.rolloffFactor *
+                (
+                    Math.max(getDistance(state.listener.position, state.panner.position), state.panner.refDistance) -
+                    state.panner.refDistance
+                )
             );
     }
 
@@ -378,7 +391,10 @@
      */
     function volumeGainExponential() {
         return Math.pow(
-            Math.max(getDistance(state.listener.position, state.panner.position), state.panner.refDistance) / state.panner.refDistance,
+            Math.max(
+                getDistance(state.listener.position, state.panner.position),
+                state.panner.refDistance
+            ) / state.panner.refDistance,
             -state.panner.rolloffFactor
         );
     }
