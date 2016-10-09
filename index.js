@@ -11,14 +11,15 @@
         fieldSize: [fieldNode.offsetWidth, fieldNode.offsetHeight, 0],
         listener: {
             position: [0, -40, 0],
-            orientation: [0, 1, 0]
+            forward: [0, 1, 0],
+            up: [0, 0, 1]
         },
         panner: {
             position: [0, 0, 0],
             orientation: [0, -1, 0],
             panningModel: 'HRTF',
             distanceModel: 'exponential',
-            maxDistance: 500,
+            maxDistance: 300,
             refDistance: 20,
             rolloffFactor: 1,
             coneInnerAngle: 90,
@@ -92,52 +93,54 @@
 
     const formNode = document.controls;
     formNode['mute'].checked = state.gain.value;
-    formNode['panner-x'].min = -Math.floor(state.fieldSize[0] / 2);
-    formNode['panner-x'].max = Math.floor(state.fieldSize[0] / 2);
-    formNode['panner-x'].value = state.panner.position[0];
-    formNode['panner-y'].min = -Math.floor(state.fieldSize[1] / 2);
-    formNode['panner-y'].max = Math.floor(state.fieldSize[1] / 2);
-    formNode['panner-y'].value = state.panner.position[1];
-    formNode['panner-z'].min = formNode['panner-z'].max = formNode['panner-z'].value = state.panner.position[2];
+    formNode['panner-positionX'].min = -Math.floor(state.fieldSize[0] / 2);
+    formNode['panner-positionX'].max = Math.floor(state.fieldSize[0] / 2);
+    formNode['panner-positionX'].value = state.panner.position[0];
+    formNode['panner-positionY'].min = -Math.floor(state.fieldSize[1] / 2);
+    formNode['panner-positionY'].max = Math.floor(state.fieldSize[1] / 2);
+    formNode['panner-positionY'].value = state.panner.position[1];
+    formNode['panner-positionZ'].min =
+    formNode['panner-positionZ'].max =
+    formNode['panner-positionZ'].value = state.panner.position[2];
     formNode['panner-angle'].value = getAngleFromVector(state.panner.orientation);
-    formNode['panner-cone-inner'].value = state.panner.coneInnerAngle;
-    formNode['panner-cone-outer'].value = state.panner.coneOuterAngle;
-    formNode['panner-cone-gain'].value = state.panner.coneOuterGain;
-    formNode['panner-model'].value = state.panner.panningModel;
-    formNode['panner-distance-model'].value = state.panner.distanceModel;
-    formNode['panner-max-distance'].value = state.panner.maxDistance;
-    formNode['panner-ref-distance'].value = state.panner.refDistance;
-    formNode['panner-rolloff-factor'].value = state.panner.rolloffFactor;
+    formNode['panner-coneInnerAngle'].value = state.panner.coneInnerAngle;
+    formNode['panner-coneOuterAngle'].value = state.panner.coneOuterAngle;
+    formNode['panner-coneOuterGain'].value = state.panner.coneOuterGain;
+    formNode['panner-panningModel'].value = state.panner.panningModel;
+    formNode['panner-distanceModel'].value = state.panner.distanceModel;
+    formNode['panner-maxDistance'].value = state.panner.maxDistance;
+    formNode['panner-refDistance'].value = state.panner.refDistance;
+    formNode['panner-rolloffFactor'].value = state.panner.rolloffFactor;
     formNode.addEventListener('input', event => {
         switch (event.target.name) {
-            case 'panner-x':
+            case 'panner-positionX':
                 state.panner.position[0] = event.target.valueAsNumber;
                 break;
-            case 'panner-y':
+            case 'panner-positionY':
                 state.panner.position[1] = event.target.valueAsNumber;
                 break;
-            case 'panner-z':
+            case 'panner-positionZ':
                 state.panner.position[2] = event.target.valueAsNumber;
                 break;
             case 'panner-angle':
                 state.panner.orientation = getVectorFromAngle(event.target.valueAsNumber);
                 break;
-            case 'panner-cone-inner':
+            case 'panner-coneInnerAngle':
                 state.panner.coneInnerAngle = event.target.valueAsNumber;
                 break;
-            case 'panner-cone-outer':
+            case 'panner-coneOuterAngle':
                 state.panner.coneOuterAngle = event.target.valueAsNumber;
                 break;
-            case 'panner-cone-gain':
+            case 'panner-coneOuterGain':
                 state.panner.coneOuterGain = event.target.valueAsNumber;
                 break;
-            case 'panner-max-distance':
+            case 'panner-maxDistance':
                 state.panner.maxDistance = event.target.valueAsNumber;
                 break;
-            case 'panner-ref-distance':
+            case 'panner-refDistance':
                 state.panner.refDistance = event.target.valueAsNumber;
                 break;
-            case 'panner-rolloff-factor':
+            case 'panner-rolloffFactor':
                 state.panner.rolloffFactor = event.target.valueAsNumber;
                 break;
         }
@@ -151,10 +154,10 @@
                     state.gain.value = 0;
                 }
                 break;
-            case 'panner-model':
+            case 'panner-panningModel':
                 state.panner.panningModel = event.target.value;
                 break;
-            case 'panner-distance-model':
+            case 'panner-distanceModel':
                 state.panner.distanceModel = event.target.value;
                 break;
         }
@@ -222,52 +225,22 @@
 
         // orientation
         if (state.cursorPosition) {
-            state.listener.orientation = [
+            state.listener.forward = [
                 state.cursorPosition[0] - state.listener.position[0],
                 -state.cursorPosition[1] - state.listener.position[1],
-                state.listener.orientation[2]
+                state.listener.forward[2]
             ];
         }
 
-        listener.setOrientation(...state.listener.orientation, 0, 0, 1);
+        listener.setOrientation(...state.listener.forward, ...state.listener.up);
 
         listenerNode.style.transform = getTransformValue({
             position: [state.listener.position[0], -state.listener.position[1]],
-            angle: getAngleFromVector(state.listener.orientation)
+            angle: getAngleFromVector(state.listener.forward)
         });
 
         // gain
         gain.gain.value = state.gain.value;
-
-        // form fields
-        formNode['listener-x'].value = Math.round(state.listener.position[0]);
-        formNode['listener-y'].value = Math.round(state.listener.position[1]);
-        formNode['listener-z'].value = Math.round(state.listener.position[2]);
-        formNode['listener-angle'].value = Math.round(getAngleFromVector(state.listener.orientation));
-
-        let volumeDistanceGainCoeff;
-        switch (state.panner.distanceModel) {
-            case 'linear':
-                volumeDistanceGainCoeff = volumeGainLinear();
-                break;
-            case 'inverse':
-                volumeDistanceGainCoeff = volumeGainInverse();
-                break;
-            case 'exponential':
-                volumeDistanceGainCoeff = volumeGainExponential();
-                break;
-        }
-        formNode['panner-distance-gain'].value = volumeDistanceGainCoeff;
-
-        const volumeConeGainCoeff = getConeGain();
-        formNode['panner-cone-volume-gain'].value = volumeConeGainCoeff;
-        formNode['panner-volume-gain'].value = volumeDistanceGainCoeff * volumeConeGainCoeff;
-
-        if (state.panner.distanceModel === 'linear') {
-            formNode['panner-max-distance'].removeAttribute('readonly');
-        } else {
-            formNode['panner-max-distance'].setAttribute('readonly', 'readonly');
-        }
 
         // panner
         panner.panningModel = state.panner.panningModel;
@@ -290,6 +263,48 @@
         pannerNode.style.setProperty('--cone-angle-outer', `${state.panner.coneOuterAngle / 2}deg`, '');
         pannerNode.style.setProperty('--cone-length', `${state.fieldDiagonal}px`, '');
         pannerNode.style.setProperty('--ref-distance', `${state.panner.refDistance}px`, '');
+        pannerNode.style.setProperty('--max-distance', `${state.panner.distanceModel === 'linear' ? state.panner.maxDistance : 0}px`, '');
+
+        // form fields
+        formNode['listener-positionX'].value = Math.round(state.listener.position[0]);
+        formNode['listener-positionY'].value = Math.round(state.listener.position[1]);
+        formNode['listener-positionZ'].value = Math.round(state.listener.position[2]);
+        const normalizedListenerForward = normalize(state.listener.forward);
+        formNode['listener-forwardX'].value = normalizedListenerForward[0];
+        formNode['listener-forwardY'].value = normalizedListenerForward[1];
+        formNode['listener-forwardZ'].value = normalizedListenerForward[2];
+        const normalizedListenerUp = normalize(state.listener.up);
+        formNode['listener-upX'].value = normalizedListenerUp[0];
+        formNode['listener-upY'].value = normalizedListenerUp[1];
+        formNode['listener-upZ'].value = normalizedListenerUp[2];
+        formNode['listener-angleForward'].value = Math.round(getAngleFromVector(state.listener.forward));
+
+        let volumeDistanceGainCoeff;
+        switch (state.panner.distanceModel) {
+            case 'linear':
+                volumeDistanceGainCoeff = volumeGainLinear();
+                break;
+            case 'inverse':
+                volumeDistanceGainCoeff = volumeGainInverse();
+                break;
+            case 'exponential':
+                volumeDistanceGainCoeff = volumeGainExponential();
+                break;
+        }
+        formNode['volume-distanceGain'].value = volumeDistanceGainCoeff;
+        const volumeConeGainCoeff = getConeGain();
+        formNode['volume-coneGain'].value = volumeConeGainCoeff;
+        formNode['volume-totalVolumeGain'].value = volumeDistanceGainCoeff * volumeConeGainCoeff;
+
+        const normalizedPannerOrientation = normalize(state.panner.orientation);
+        formNode['panner-orientationX'].value = normalizedPannerOrientation[0];
+        formNode['panner-orientationY'].value = normalizedPannerOrientation[1];
+        formNode['panner-orientationZ'].value = normalizedPannerOrientation[2];
+        if (state.panner.distanceModel === 'linear') {
+            formNode['panner-maxDistance'].removeAttribute('readonly');
+        } else {
+            formNode['panner-maxDistance'].setAttribute('readonly', 'readonly');
+        }
     }
 
     /**
@@ -310,6 +325,11 @@
      */
     function getDistance(p1, p2) {
         return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
+    }
+
+    function normalize(v) {
+        const sum = Math.sqrt(v.reduce((result, axisValue) => result + Math.pow(axisValue, 2), 0));
+        return v.map(axisValue => axisValue / sum);
     }
 
     /**

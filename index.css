@@ -11,6 +11,7 @@
     --cone-outer-gain: 0;
     --cone-length: 3000px;
     --ref-distance: 0;
+    --max-distance: 0;
 }
 
 html, body {
@@ -22,7 +23,7 @@ body {
     height: 100%;
     margin: 0;
     overflow: hidden;
-    font: 16px/1.4 'Arial Narrow', Arial, sans-serif;
+    font: 16px/24px 'Arial Narrow', Arial, sans-serif;
 }
 
 .hidden {
@@ -37,6 +38,7 @@ body {
     bottom: 0;
     left: 0;
     background: rgba(255, 255, 255, 0.95);
+    z-index: 1;
 }
 .loading::after {
     content: 'Loading sound file...';
@@ -48,56 +50,80 @@ body {
 
 /* controls block */
 .controls {
-    flex: 0 0 400px;
-    min-width: 15rem;
-    padding: 1rem;
+    flex: 0 0 500px;
+    padding: 15px;
     background-color: var(--color-red);
     box-sizing: border-box;
     overflow: auto;
 }
 .controls-title {
-    margin: 0 0 2rem;
-    color: var(--color-yellow);
-}
-.controls-fieldset {
     display: inline-block;
+    margin: 0 0 30px;
+    color: var(--color-yellow);
+    font-size: 32px;
+    line-height: 40px;
+}
+.controls-sound {
+    float: right;
+}
+.controls-sound-input,
+.controls-sound-text {
+    position: absolute;
+    left: -9000px;
+    opacity: 0;
+}
+.controls-sound-label {
+    font-size: 35px;
+    line-height: 49px;
+    cursor: pointer;
+}
+.controls-sound-label::after {
+    content: '\1F507';
+}
+.controls-sound-input:checked + .controls-sound-label::after {
+    content: '\1F508';
+}
+
+.controls-fieldset {
+    float: left;
     width: 50%;
-    margin: 0;
-    padding: 1rem 1rem 1rem 0;
+    margin: 0 0 28px;
+    padding: 0 0 0 15px;
     border: 0;
-    vertical-align: top;
     box-sizing: border-box;
 }
 .controls-fieldset_panner {
-    display: block;
-    width: 100%;
+    padding: 0 15px 0 0;
 }
 .controls-legend {
+    margin-bottom: 15px;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 18px;
+    line-height: 25px;
 }
 .controls-text {
-    margin: 0 0 1rem;
+    clear: left;
+    margin: 0;
 }
 .controls-fieldset-row {
     display: flex;
     align-items: center;
-    margin: 0 0 0.6rem;
+    margin: 0 0 10px;
 }
 .controls-fieldset-row-label {
-    flex: 0 0 50%;
+    flex: 0 0 60%;
 }
 .controls-fieldset-row-input,
 .controls-fieldset-row-select {
-    width: 50%;
-    padding: 0.25rem 0.5rem 0.3rem;
+    width: 40%;
+    padding: 4px 8px 5px;
     border: 1px solid #fff;
-    border-radius: 0.2rem;
+    border-radius: 3px;
     box-sizing: border-box;
     background-color: #fff;
 }
 .controls-fieldset-row-select {
-    height: 1.5rem;
+    height: 22px;
     padding: 0;
 }
 .controls-fieldset-row-input:focus {
@@ -110,24 +136,6 @@ body {
 }
 .controls-fieldset-row-input:invalid {
     color: var(--color-dark-red);
-}
-.controls-sound {
-    float: right;
-    cursor: pointer;
-}
-.controls-sound-input {
-    position: absolute;
-    left: -9000px;
-    opacity: 0;
-}
-.controls-sound-icon {
-    font-size: 2.2rem;
-}
-.controls-sound-icon::after {
-    content: '\1F507';
-}
-.controls-sound-input:checked + .controls-sound-icon::after {
-    content: '\1F508';
 }
 
 /* field */
@@ -191,11 +199,18 @@ body {
     background-color: var(--color-dark-grey);
     transform: rotateZ(var(--cone-angle-outer));
 }
-.object-ref-distance {
+.object-ref-distance,
+.object-max-distance {
     position: absolute;
-    width: calc(var(--ref-distance) * 2);
-    height: calc(var(--ref-distance) * 2);
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    box-shadow: 0 0 0 1px var(--color-red);
+    box-shadow: inset 0 0 0 1px;
+}
+.object-ref-distance {
+    padding: var(--ref-distance);
+    color: var(--color-red);
+}
+.object-max-distance {
+    padding: var(--max-distance);
+    color: var(--color-yellow);
 }
