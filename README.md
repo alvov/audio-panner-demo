@@ -1,7 +1,7 @@
 [Audio panner demo](#audio-panner-demo)  
 [PannerNode (rus)](#pannernode)  
 [AudioListener (rus)](#audiolistener)  
-[Описание демо](#описание-демо)
+[Описание демо](#Описание-демо)
 
 #Audio panner demo
 
