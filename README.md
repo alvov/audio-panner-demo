@@ -14,7 +14,7 @@ indicated by the arrow inside the white circle.
 Use input fields to change the orientation and
 position of the sound source and all the other sound source parameters.
 
-_This demo uses the sound from [www.bigsoundbank.com](http://www.bigsoundbank.com/sound-0948-tractor-and-shredder.html)._
+_This demo uses the sound made with Apple GarageBand on an iPhone._
 
 #`PannerNode`
 

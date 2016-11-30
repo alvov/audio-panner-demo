@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <title>Audio panner demo</title>
     <link rel="stylesheet" href="index.css">
+    <script src="node_modules/whatwg-fetch/fetch.js"></script>
     <script src="index.js" defer></script>
 </head>
 <body>
-    <div class="loading"></div>
-
     <form class="controls" name="controls">
         <h1 class="controls-title">Audio panner demo</h1>
 
@@ -25,13 +24,13 @@
                 name: 'PannerNode',
                 id: 'panner',
                 rows: [
-                    { name: 'positionX', star: true },
-                    { name: 'positionY', star: true },
-                    { name: 'positionZ', star: true, attributes: 'readonly' },
+                    { name: 'positionX', star: 1 },
+                    { name: 'positionY', star: 1 },
+                    { name: 'positionZ', star: 1, attributes: 'readonly' },
                     { name: 'orientationX', attributes: 'readonly' },
                     { name: 'orientationY', attributes: 'readonly' },
                     { name: 'orientationZ', attributes: 'readonly' },
-                    { name: 'angle', attributes: 'min="-360" max="360" step="10"' },
+                    { name: 'angle', star: 2, attributes: 'min="-360" max="360" step="10"' },
                     { name: 'coneInnerAngle', attributes: 'min="0" max="360" step="10"' },
                     { name: 'coneOuterAngle', attributes: 'min="0" max="360" step="10"' },
                     { name: 'coneOuterGain', attributes: 'min="0" max="1" step="0.1"' },
@@ -46,16 +45,16 @@
                 name: 'AudioListener',
                 id: 'listener',
                 rows: [
-                    { name: 'positionX', star: true, attributes: 'readonly' },
-                    { name: 'positionY', star: true, attributes: 'readonly' },
-                    { name: 'positionZ', star: true, attributes: 'readonly' },
+                    { name: 'positionX', star: 1, attributes: 'readonly' },
+                    { name: 'positionY', star: 1, attributes: 'readonly' },
+                    { name: 'positionZ', star: 1, attributes: 'readonly' },
                     { name: 'forwardX', attributes: 'readonly' },
                     { name: 'forwardY', attributes: 'readonly' },
                     { name: 'forwardZ', attributes: 'readonly' },
                     { name: 'upX', attributes: 'readonly' },
                     { name: 'upY', attributes: 'readonly' },
                     { name: 'upZ', attributes: 'readonly' },
-                    { name: 'angleForward', attributes: 'readonly' }
+                    { name: 'angleForward', star: 2, attributes: 'readonly' }
                 ]
             }));
             FormBuilder.render(FormBuilder.fieldset({
@@ -69,18 +68,28 @@
             }));
         </script>
         <p class="controls-text">
-            * Axis X points to the right; axis Y points to the top; axiz Z points towards us
+            * Axis X points to the right; axis Y points to the top; axis Z points towards us
+        </p>
+        <p class="controls-text">
+            ** These attributes are not of the related objects but added for convenience.
         </p>
     </form>
 
     <div class="field">
         <div class="object object_panner hidden">
+            <div class="object-instance">→</div>
             <div class="object-cone object-cone_right"></div>
             <div class="object-cone object-cone_left"></div>
             <div class="object-ref-distance"></div>
             <div class="object-max-distance"></div>
         </div>
-        <div class="object object_listener hidden"></div>
+        <div class="object object_listener hidden">
+            <div class="object-instance">→</div>
+        </div>
+    </div>
+
+    <div class="click-to-play-message">
+        Tap on the red circle or this message to start playing sound
     </div>
 </body>
 </html>

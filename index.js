@@ -1,10 +1,18 @@
 (function() {
     'use strict';
 
-    const loadingScreenNode = document.querySelector('.loading');
+    let clickToPlayMessageNode = document.querySelector('.click-to-play-message');
     const fieldNode = document.querySelector('.field');
     const listenerNode = document.querySelector('.object_listener');
     const pannerNode = document.querySelector('.object_panner');
+    const pannerInstanceNode = pannerNode.querySelector('.object-instance');
+
+    const soundStates = {
+        LOADING: 'LOADING',
+        FAILED: 'FAILED',
+        PLAYING: 'PLAYING',
+        STOPPED: 'STOPPED'
+    };
 
     const state = {
         cursorPosition: null,
@@ -26,11 +34,13 @@
             coneOuterAngle: 160,
             coneOuterGain: 0.1
         },
-        gain: {
-            value: 1
-        }
+        sound: soundStates.LOADING
     };
     updateFieldSize();
+
+    const soundFormats = new Map();
+    soundFormats.set('audio/aac', 'panner.m4a');
+    soundFormats.set('audio/ogg', 'panner.ogg');
 
     const KEY_W = 87;
     const KEY_S = 83;
@@ -49,10 +59,41 @@
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioCtx = new AudioContext();
-    const audioSource = audioCtx.createBufferSource();
     const listener = audioCtx.listener;
     const panner = audioCtx.createPanner();
-    const gain = audioCtx.createGain();
+    panner.connect(audioCtx.destination);
+    let audioSource;
+
+    const soundPromise = Promise.resolve()
+        .then(() => {
+            const tempAudioNode = document.createElement('audio');
+            for (let [type, file] of soundFormats) {
+                if (tempAudioNode.canPlayType(type) !== '') {
+                    return fetch(file)
+                        .then(response => response.arrayBuffer())
+                        .then(buffer => {
+                            return new Promise((resolveDecoding, rejectDecoding) => {
+                                audioCtx.decodeAudioData(buffer, function(decodedData) {
+                                    resolveDecoding(decodedData);
+                                }, rejectDecoding);
+                            });
+                        });
+                }
+            }
+            return Promise.reject(`Provided file types ${Array.from(soundFormats.keys())} are not supported`);
+        })
+        .then(decodedData => {
+            state.sound = soundStates.STOPPED;
+            return decodedData;
+        })
+        .catch(error => {
+            state.sound = soundStates.FAILED;
+            alert('Something went wrong while decoding audio in your browser, sorry ' + error);
+            if (error) {
+                console.error(error);
+            }
+            return Promise.reject();
+        });
 
     const keyPressed = {
         [KEY_W]: false,
@@ -65,34 +106,7 @@
         [KEY_RIGHT]: false
     };
 
-    fetch('0948.ogg')
-        .then(response => response.arrayBuffer())
-        .then(buffer => {
-            return new Promise((resolve, reject) => {
-                audioCtx.decodeAudioData(buffer, function(decodedData) {
-                    audioSource.buffer = decodedData;
-                    audioSource.connect(gain);
-                    gain.connect(panner);
-                    panner.connect(audioCtx.destination);
-                    audioSource.loop = true;
-                    resolve();
-                }, reject);
-            });
-        })
-        .catch(error => {
-            alert('Something didn\'t work in your browser, sorry');
-            console.error(error);
-        })
-        .then(() => {
-            render();
-            pannerNode.classList.remove(CLASS_HIDDEN);
-            listenerNode.classList.remove(CLASS_HIDDEN);
-            loadingScreenNode.remove();
-            audioSource.start(0);
-        });
-
     const formNode = document.controls;
-    formNode['mute'].checked = state.gain.value;
     formNode['panner-positionX'].min = -Math.floor(state.fieldSize[0] / 2);
     formNode['panner-positionX'].max = Math.floor(state.fieldSize[0] / 2);
     formNode['panner-positionX'].value = state.panner.position[0];
@@ -148,11 +162,7 @@
     formNode.addEventListener('change', event => {
         switch (event.target.name) {
             case 'mute':
-                if (event.target.checked) {
-                    state.gain.value = 1;
-                } else {
-                    state.gain.value = 0;
-                }
+                togglePlay();
                 break;
             case 'panner-panningModel':
                 state.panner.panningModel = event.target.value;
@@ -162,6 +172,10 @@
                 break;
         }
     });
+
+    pannerInstanceNode.addEventListener('click', togglePlay);
+
+    clickToPlayMessageNode.addEventListener('click', togglePlay);
 
     document.addEventListener('keydown', event => {
         if (event.keyCode in keyPressed) {
@@ -174,14 +188,47 @@
         }
     });
     document.addEventListener('mousemove', event => {
-        state.cursorPosition = [
-            event.clientX - fieldNode.offsetLeft - state.fieldSize[0] / 2,
-            event.clientY - fieldNode.offsetTop - state.fieldSize[1] / 2
-        ];
+        state.cursorPosition = getCursorPosition(event);
+    });
+    document.addEventListener('touchend', event => {
+        const touch = event.touches[0] || event.changedTouches[0];
+        state.cursorPosition = getCursorPosition(touch);
     });
     window.addEventListener('resize', () => {
         state.fieldSize = [fieldNode.offsetWidth, fieldNode.offsetHeight, 0];
     });
+
+    render();
+    pannerNode.classList.remove(CLASS_HIDDEN);
+    listenerNode.classList.remove(CLASS_HIDDEN);
+
+    /**
+     * Toggles the sound playing on and off
+     */
+    function togglePlay() {
+        if (state.sound !== soundStates.FAILED) {
+            if (clickToPlayMessageNode) {
+                clickToPlayMessageNode.remove();
+                clickToPlayMessageNode = null;
+            }
+            soundPromise
+                .then(decodedData => {
+                    if (state.sound === soundStates.STOPPED) {
+                        state.sound = soundStates.PLAYING;
+                        audioSource = createAudioSource(decodedData);
+                        audioSource.start(0);
+                    } else if (state.sound === soundStates.PLAYING) {
+                        state.sound = soundStates.STOPPED;
+                        audioSource.stop();
+                        audioSource.disconnect(panner);
+                    }
+                })
+                .catch(() => {
+                    pannerInstanceNode.removeEventListener('click', togglePlay);
+                    formNode['mute'].remove();
+                })
+        }
+    }
 
     /**
      * Does the whole rendering in a loop
@@ -231,16 +278,12 @@
                 state.listener.forward[2]
             ];
         }
-
-        listener.setOrientation(...state.listener.forward, ...state.listener.up);
+        setListenerOrientation(...state.listener.forward, ...state.listener.up);
 
         listenerNode.style.transform = getTransformValue({
             position: [state.listener.position[0], -state.listener.position[1]],
             angle: getAngleFromVector(state.listener.forward)
         });
-
-        // gain
-        gain.gain.value = state.gain.value;
 
         // panner
         panner.panningModel = state.panner.panningModel;
@@ -252,9 +295,11 @@
         panner.coneOuterAngle = state.panner.coneOuterAngle;
         panner.coneOuterGain = state.panner.coneOuterGain;
 
-        panner.setOrientation(...state.panner.orientation);
+        setPannerOrientation(...state.panner.orientation);
         setPosition(panner, ...state.panner.position);
 
+        pannerNode.classList.toggle('object_loading', state.sound === soundStates.LOADING);
+        pannerNode.classList.toggle('object_active', state.sound === soundStates.PLAYING);
         pannerNode.style.transform = getTransformValue({
             position: [state.panner.position[0], -state.panner.position[1]],
             angle: getAngleFromVector(state.panner.orientation)
@@ -266,6 +311,7 @@
         pannerNode.style.setProperty('--max-distance', `${state.panner.distanceModel === 'linear' ? state.panner.maxDistance : 0}px`, '');
 
         // form fields
+        formNode['mute'].checked = state.sound === soundStates.PLAYING;
         formNode['listener-positionX'].value = Math.round(state.listener.position[0]);
         formNode['listener-positionY'].value = Math.round(state.listener.position[1]);
         formNode['listener-positionZ'].value = Math.round(state.listener.position[2]);
@@ -308,6 +354,31 @@
     }
 
     /**
+     * Returns new AudioBufferSourceNode instance for given buffer
+     * @param {Object} decodedData
+     * @returns {Object}
+     */
+    function createAudioSource(decodedData) {
+        const audioSource = audioCtx.createBufferSource();
+        audioSource.loop = true;
+        audioSource.connect(panner);
+        audioSource.buffer = decodedData;
+        return audioSource;
+    }
+
+    /**
+     * Returns cursor position
+     * @param {Object} event
+     * @returns {number[]}
+     */
+    function getCursorPosition(event) {
+        return [
+            event.clientX - fieldNode.offsetLeft - state.fieldSize[0] / 2,
+            event.clientY - fieldNode.offsetTop - state.fieldSize[1] / 2
+        ];
+    }
+
+    /**
      * Returns value form `transform` property for given position and angle
      * @param {number[]} position
      * @param {number} angle
@@ -327,6 +398,11 @@
         return Math.sqrt(Math.pow(p1[0] - p2[0], 2) + Math.pow(p1[1] - p2[1], 2));
     }
 
+    /**
+     * Returns normalized 3d-vector
+     * @param {number[]} v
+     * @returns {number[]}
+     */
     function normalize(v) {
         const sum = Math.sqrt(v.reduce((result, axisValue) => result + Math.pow(axisValue, 2), 0));
         return v.map(axisValue => axisValue / sum);
@@ -340,12 +416,50 @@
      * @param {number} z
      */
     function setPosition(obj, x, y, z) {
-        if (obj.setPosition) {
-            obj.setPosition(x, y, z);
-        } else {
+        if (obj.positionX) {
             obj.positionX.value = x;
             obj.positionY.value = y;
             obj.positionZ.value = z;
+        } else {
+            obj.setPosition(x, y, z);
+        }
+    }
+
+    /**
+     * Sets listener orientation with fallback to older API
+     * @param {number} forwardX
+     * @param {number} forwardY
+     * @param {number} forwardZ
+     * @param {number} upX
+     * @param {number} upY
+     * @param {number} upZ
+     */
+    function setListenerOrientation(forwardX, forwardY, forwardZ, upX, upY, upZ) {
+        if (listener.forwardX) {
+            listener.forwardX.value = forwardX;
+            listener.forwardY.value = forwardY;
+            listener.forwardZ.value = forwardZ;
+            listener.upX.value = upX;
+            listener.upY.value = upY;
+            listener.upZ.value = upZ;
+        } else {
+            listener.setOrientation(forwardX, forwardY, forwardZ, upX, upY, upZ);
+        }
+    }
+
+    /**
+     * Sets panner orientation with fallback to older API
+     * @param {number} orientationX
+     * @param {number} orientationY
+     * @param {number} orientationZ
+     */
+    function setPannerOrientation(orientationX, orientationY, orientationZ) {
+        if (panner.orientationX) {
+            panner.orientationX.value = orientationX;
+            panner.orientationY.value = orientationY;
+            panner.orientationZ.value = orientationZ;
+        } else {
+            panner.setOrientation(orientationX, orientationY, orientationZ);
         }
     }
 

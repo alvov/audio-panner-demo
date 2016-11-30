@@ -6,8 +6,8 @@ class FormBuilder {
         return `<legend class="controls-legend">${name}</legend>`;
     }
 
-    static label({ id, name, star }) {
-        return `<label class="controls-fieldset-row-label" for="${id}">${name}${star ? '*' : ''}</label>`;
+    static label({ id, name, star = 0 }) {
+        return `<label class="controls-fieldset-row-label" for="${id}">${name}${'*'.repeat(star)}</label>`;
     }
 
     static number({ id, attributes }) {

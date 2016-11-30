@@ -1,14 +1,16 @@
 {
   "name": "audio-panner-demo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "script.js",
-  "dependencies": {},
+  "dependencies": {
+    "whatwg-fetch": "2.0.1"
+  },
   "devDependencies": {
     "http-server": "0.9.0"
   },
   "scripts": {
-    "start": "node node_modules/http-server/bin/http-server -a 127.0.0.1"
+    "start": "node node_modules/http-server/bin/http-server"
   },
   "keywords": [],
   "author": "",
