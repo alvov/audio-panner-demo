@@ -1,24 +1,27 @@
 [Audio panner demo](#audio-panner-demo)  
 [PannerNode (rus)](#pannernode)  
 [AudioListener (rus)](#audiolistener)  
-[Описание демо](#Описание-демо)
+[Описание демо (rus)](#Описание-демо)
 
 #Audio panner demo
+
+This is the demo use of `PannerNode` and `AudioListener` from javascript `Web Audio API` (in 2D space). 
 
 Use `[W, A, S, D]` or arrow keys to move the listener (black circle)
 around the panner sound source (red circle).
  
 Use mouse/touchpad to change listener's orientation,
-indicated by the arrow inside the white circle.
+indicated by the arrow inside the white circle.  
+Or touch the screen when on mobile.
 
 Use input fields to change the orientation and
 position of the sound source and all the other sound source parameters.
 
-_This demo uses the sound made with Apple GarageBand on an iPhone._
+_This demo uses the sound made (laboriously) with Apple GarageBand on an iPhone._
 
 #`PannerNode`
 
-Интерфейс [`PannerNode`](https://webaudio.github.io/web-audio-api/#the-pannernode-interface) — часть [`Web Audio API`](https://webaudio.github.io/web-audio-api/), предназначенная для задания позиции, направления и других характеристик для источника звука в пространстве.
+Интерфейс [`PannerNode`](https://webaudio.github.io/web-audio-api/#the-pannernode-interface) — часть javascript [`Web Audio API`](https://webaudio.github.io/web-audio-api/), предназначенная для задания позиции, направления и других характеристик для источника звука в пространстве.
 Это потомок [`AudioNode`](https://webaudio.github.io/web-audio-api/#the-audionode-interface) (наследует его ссвойства и методы), для которого можно определить позицию в _правой_ Декартовой системе координат, а также направленность звука с помощью системы конусов.
 
 `PannerNode` обрабатывает только один входной сигнал (моно/стерео), выходной сигнал всегда стерео. Трансформация в правый и левый канал производится относительно положения и направления слушателя — объекта `AudioListener`.
@@ -158,7 +161,8 @@ _В FF поддержаны только с [50-й версии](https://bugzill
 
 #Описание демо
 
-Демо показывает, как изменяется уровень громкости звука в правом и левом канале в зависимости от расположения, направления и других параметров источника звука в двумерном пространстве.
+Демо показывает, как изменяется уровень громкости звука в правом и левом канале в зависимости от расположения,
+направления и других параметров источника звука в двумерном пространстве.
 
 ##Поле
 
@@ -171,7 +175,8 @@ _В FF поддержаны только с [50-й версии](https://bugzill
 
 Показан черным кружком со стрелкой, которая обозначает направление его головы. Считаем, что левое и правое ухо слушателя находятся соответственно по левую и правую стороны стрелки.
 
-Положение слушателя управляется с клавиатуры с помощью стрелок или клавиш `[W, A, S, D]`. Направление головы управляется положением курсора.
+Положение слушателя управляется с клавиатуры с помощью стрелок или клавиш `[W, A, S, D]`.
+Направление головы управляется положением курсора (на тач-устройстве — прикосновением к любой части экрана).
 
 ###Источник звука
 
@@ -185,7 +190,10 @@ _В FF поддержаны только с [50-й версии](https://bugzill
 
 Светло-красный круг вокруг источника обозначает область, ограниченную расстоянием `refDistance`.
 
-Желтый круг вокруг источника обозначает границу `maxDistance` (появляется только при выборе значения `linear` параметра `distanceModel`).
+Красный круг вокруг источника обозначает границу `maxDistance` (появляется только при выборе значения `linear` параметра `distanceModel`).
+
+Нажатие на кружок источника звука останавливает/возобновляет воспроизведение звука. Во время воспроизведения кружок
+пульсирует (типа того).
 
 Большинство параметров источника звука можно изменить, редактируя значения в соответствующих полях формы в разделе `PannerNode`.
 
@@ -197,5 +205,5 @@ _В FF поддержаны только с [50-й версии](https://bugzill
 
 Кроме того, в разделе `Volume gains` показаны расчетные значения коэффициентов уменьшения громкости в зависимости от расстояния — `distanceGain`, направления — `coneGain` и результат их произведения — `totalVolumeGain`.
 
-Иконка c динамиком в правом верхнем углу формы включает/выключает звук.
+Иконка c динамиком в правом верхнем углу формы останавливает/возобновляет воспроизведение звука.
 
