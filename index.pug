@@ -1,0 +1,82 @@
+mixin fieldset(name, id, rows)
+    fieldset(class='controls-fieldset controls-fieldset_'+id)
+        legend.controls-legend= name
+        each row in rows
+            - var rowId = id + '-' + row.name
+            .controls-fieldset-row
+                label.controls-fieldset-row-label(for=rowId)= row.name + '*'.repeat(row.star)
+                if row.type === 'select'
+                    select.controls-fieldset-row-select(name=rowId id=rowId)
+                        each option in row.options
+                            option(value=option)= option
+                else
+                    input.controls-fieldset-row-input(name=rowId id=rowId type='number')&attributes(row.attributes)
+
+doctype html
+html(lang='en')
+    head
+        meta(charset='UTF-8')
+        title Audio panner demo
+        meta(name='description' content='Demo page for usage of PannerNode and AudioListener from javascript Web Audio API')
+        link(rel='stylesheet' href='index.css')
+        script(src='node_modules/whatwg-fetch/fetch.js')
+        script(src='index.js' defer)
+    body
+        form.controls(name='controls')
+            h1.controls-title Audio panner demo
+            .controls-sound
+                input.controls-sound-input(type='checkbox' name='mute' id='mute')
+                label.controls-sound-label(for='mute')
+                    span.controls-sound-text Mute sound
+
+            +fieldset('PannerNode', 'panner', [
+                { name: 'positionX', star: 1 },
+                { name: 'positionY', star: 1 },
+                { name: 'positionZ', star: 1, attributes: { readonly: true } },
+                { name: 'orientationX', attributes: { readonly: true } },
+                { name: 'orientationY', attributes: { readonly: true } },
+                { name: 'orientationZ', attributes: { readonly: true } },
+                { name: 'orientationAngle', star: 2, attributes: { min: -360, max: 360, step: 10 } },
+                { name: 'coneInnerAngle', attributes: { min: 0, max: 360, step: 10 } },
+                { name: 'coneOuterAngle', attributes: { min: 0, max: 360, step: 10 } },
+                { name: 'coneOuterGain', attributes: { min: 0, max: 1, step: 0.1 } },
+                { name: 'panningModel', type: 'select', options: ['HRTF', 'equalpower'] },
+                { name: 'distanceModel', type: 'select', options: ['linear', 'inverse', 'exponential'] },
+                { name: 'refDistance', attributes: { min: 0 } },
+                { name: 'maxDistance', attributes: { min: 0 } },
+                { name: 'rolloffFactor', attributes: { min: 0, step: 0.1 } }
+            ])
+
+            +fieldset('AudioListener', 'listener', [
+                { name: 'positionX', star: 1, attributes: { readonly: true } },
+                { name: 'positionY', star: 1, attributes: { readonly: true } },
+                { name: 'positionZ', star: 1, attributes: { readonly: true } },
+                { name: 'forwardX', attributes: { readonly: true } },
+                { name: 'forwardY', attributes: { readonly: true } },
+                { name: 'forwardZ', attributes: { readonly: true } },
+                { name: 'upX', attributes: { readonly: true } },
+                { name: 'upY', attributes: { readonly: true } },
+                { name: 'upZ', attributes: { readonly: true } },
+                { name: 'forwardAngle', star: 2, attributes: { readonly: true } }
+            ])
+
+            +fieldset('Volume gains', 'volume', [
+                { name: 'distanceGain', attributes: { readonly: true } },
+                { name: 'coneGain', attributes: { readonly: true } },
+                { name: 'totalVolumeGain', attributes: { readonly: true } }
+            ])
+
+            p.controls-text * Axis X points to the right; axis Y points to the top; axis Z points towards us
+            p.controls-text ** These attributes are not of the related objects but added for convenience
+
+        .field
+            .object.object_panner.hidden
+                .object-instance →
+                .object-cone.object-cone_right
+                .object-cone.object-cone_left
+                .object-ref-distance
+                .object-max-distance
+            .object.object_listener.hidden
+                .object-instance →
+
+        .click-to-play-message Tap on the red circle or this message to start playing sound

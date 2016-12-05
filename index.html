@@ -1,96 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <title>Audio panner demo</title>
     <meta name="description" content="Demo page for usage of PannerNode and AudioListener from javascript Web Audio API">
     <link rel="stylesheet" href="index.css">
     <script src="node_modules/whatwg-fetch/fetch.js"></script>
     <script src="index.js" defer></script>
-</head>
-<body>
+  </head>
+  <body>
     <form class="controls" name="controls">
-        <h1 class="controls-title">Audio panner demo</h1>
-
-        <div class="controls-sound">
-            <input type="checkbox" name="mute" id="mute" class="controls-sound-input">
-            <label class="controls-sound-label" for="mute">
-                <span class="controls-sound-text">Mute sound</span>
-            </label>
+      <h1 class="controls-title">Audio panner demo</h1>
+      <div class="controls-sound">
+        <input class="controls-sound-input" type="checkbox" name="mute" id="mute">
+        <label class="controls-sound-label" for="mute"><span class="controls-sound-text">Mute sound</span></label>
+      </div>
+      <fieldset class="controls-fieldset controls-fieldset_panner">
+        <legend class="controls-legend">PannerNode</legend>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-positionX">positionX*</label>
+          <input class="controls-fieldset-row-input" name="panner-positionX" id="panner-positionX" type="number"/>
         </div>
-
-        <script src="form-builder.js"></script>
-        <script type="text/javascript">
-            FormBuilder.render(FormBuilder.fieldset({
-                name: 'PannerNode',
-                id: 'panner',
-                rows: [
-                    { name: 'positionX', star: 1 },
-                    { name: 'positionY', star: 1 },
-                    { name: 'positionZ', star: 1, attributes: 'readonly' },
-                    { name: 'orientationX', attributes: 'readonly' },
-                    { name: 'orientationY', attributes: 'readonly' },
-                    { name: 'orientationZ', attributes: 'readonly' },
-                    { name: 'orientationAngle', star: 2, attributes: 'min="-360" max="360" step="10"' },
-                    { name: 'coneInnerAngle', attributes: 'min="0" max="360" step="10"' },
-                    { name: 'coneOuterAngle', attributes: 'min="0" max="360" step="10"' },
-                    { name: 'coneOuterGain', attributes: 'min="0" max="1" step="0.1"' },
-                    { name: 'panningModel', type: 'select', options: ['HRTF', 'equalpower'] },
-                    { name: 'distanceModel', type: 'select', options: ['linear', 'inverse', 'exponential'] },
-                    { name: 'refDistance', attributes: 'min="0"' },
-                    { name: 'maxDistance', attributes: 'min="0"' },
-                    { name: 'rolloffFactor', attributes: 'min="0" step="0.1"' }
-                ]
-            }));
-            FormBuilder.render(FormBuilder.fieldset({
-                name: 'AudioListener',
-                id: 'listener',
-                rows: [
-                    { name: 'positionX', star: 1, attributes: 'readonly' },
-                    { name: 'positionY', star: 1, attributes: 'readonly' },
-                    { name: 'positionZ', star: 1, attributes: 'readonly' },
-                    { name: 'forwardX', attributes: 'readonly' },
-                    { name: 'forwardY', attributes: 'readonly' },
-                    { name: 'forwardZ', attributes: 'readonly' },
-                    { name: 'upX', attributes: 'readonly' },
-                    { name: 'upY', attributes: 'readonly' },
-                    { name: 'upZ', attributes: 'readonly' },
-                    { name: 'forwardAngle', star: 2, attributes: 'readonly' }
-                ]
-            }));
-            FormBuilder.render(FormBuilder.fieldset({
-                name: 'Volume gains',
-                id: 'volume',
-                rows: [
-                    { name: 'distanceGain', attributes: 'readonly' },
-                    { name: 'coneGain', attributes: 'readonly' },
-                    { name: 'totalVolumeGain', attributes: 'readonly' }
-                ]
-            }));
-        </script>
-        <p class="controls-text">
-            * Axis X points to the right; axis Y points to the top; axis Z points towards us
-        </p>
-        <p class="controls-text">
-            ** These attributes are not of the related objects but added for convenience
-        </p>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-positionY">positionY*</label>
+          <input class="controls-fieldset-row-input" name="panner-positionY" id="panner-positionY" type="number"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-positionZ">positionZ*</label>
+          <input class="controls-fieldset-row-input" name="panner-positionZ" id="panner-positionZ" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-orientationX">orientationX</label>
+          <input class="controls-fieldset-row-input" name="panner-orientationX" id="panner-orientationX" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-orientationY">orientationY</label>
+          <input class="controls-fieldset-row-input" name="panner-orientationY" id="panner-orientationY" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-orientationZ">orientationZ</label>
+          <input class="controls-fieldset-row-input" name="panner-orientationZ" id="panner-orientationZ" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-orientationAngle">orientationAngle**</label>
+          <input class="controls-fieldset-row-input" name="panner-orientationAngle" id="panner-orientationAngle" type="number" min="-360" max="360" step="10"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-coneInnerAngle">coneInnerAngle</label>
+          <input class="controls-fieldset-row-input" name="panner-coneInnerAngle" id="panner-coneInnerAngle" type="number" min="0" max="360" step="10"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-coneOuterAngle">coneOuterAngle</label>
+          <input class="controls-fieldset-row-input" name="panner-coneOuterAngle" id="panner-coneOuterAngle" type="number" min="0" max="360" step="10"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-coneOuterGain">coneOuterGain</label>
+          <input class="controls-fieldset-row-input" name="panner-coneOuterGain" id="panner-coneOuterGain" type="number" min="0" max="1" step="0.1"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-panningModel">panningModel</label>
+          <select class="controls-fieldset-row-select" name="panner-panningModel" id="panner-panningModel">
+            <option value="HRTF">HRTF</option>
+            <option value="equalpower">equalpower</option>
+          </select>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-distanceModel">distanceModel</label>
+          <select class="controls-fieldset-row-select" name="panner-distanceModel" id="panner-distanceModel">
+            <option value="linear">linear</option>
+            <option value="inverse">inverse</option>
+            <option value="exponential">exponential</option>
+          </select>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-refDistance">refDistance</label>
+          <input class="controls-fieldset-row-input" name="panner-refDistance" id="panner-refDistance" type="number" min="0"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-maxDistance">maxDistance</label>
+          <input class="controls-fieldset-row-input" name="panner-maxDistance" id="panner-maxDistance" type="number" min="0"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="panner-rolloffFactor">rolloffFactor</label>
+          <input class="controls-fieldset-row-input" name="panner-rolloffFactor" id="panner-rolloffFactor" type="number" min="0" step="0.1"/>
+        </div>
+      </fieldset>
+      <fieldset class="controls-fieldset controls-fieldset_listener">
+        <legend class="controls-legend">AudioListener</legend>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-positionX">positionX*</label>
+          <input class="controls-fieldset-row-input" name="listener-positionX" id="listener-positionX" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-positionY">positionY*</label>
+          <input class="controls-fieldset-row-input" name="listener-positionY" id="listener-positionY" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-positionZ">positionZ*</label>
+          <input class="controls-fieldset-row-input" name="listener-positionZ" id="listener-positionZ" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-forwardX">forwardX</label>
+          <input class="controls-fieldset-row-input" name="listener-forwardX" id="listener-forwardX" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-forwardY">forwardY</label>
+          <input class="controls-fieldset-row-input" name="listener-forwardY" id="listener-forwardY" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-forwardZ">forwardZ</label>
+          <input class="controls-fieldset-row-input" name="listener-forwardZ" id="listener-forwardZ" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-upX">upX</label>
+          <input class="controls-fieldset-row-input" name="listener-upX" id="listener-upX" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-upY">upY</label>
+          <input class="controls-fieldset-row-input" name="listener-upY" id="listener-upY" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-upZ">upZ</label>
+          <input class="controls-fieldset-row-input" name="listener-upZ" id="listener-upZ" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="listener-forwardAngle">forwardAngle**</label>
+          <input class="controls-fieldset-row-input" name="listener-forwardAngle" id="listener-forwardAngle" type="number" readonly="readonly"/>
+        </div>
+      </fieldset>
+      <fieldset class="controls-fieldset controls-fieldset_volume">
+        <legend class="controls-legend">Volume gains</legend>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="volume-distanceGain">distanceGain</label>
+          <input class="controls-fieldset-row-input" name="volume-distanceGain" id="volume-distanceGain" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="volume-coneGain">coneGain</label>
+          <input class="controls-fieldset-row-input" name="volume-coneGain" id="volume-coneGain" type="number" readonly="readonly"/>
+        </div>
+        <div class="controls-fieldset-row">
+          <label class="controls-fieldset-row-label" for="volume-totalVolumeGain">totalVolumeGain</label>
+          <input class="controls-fieldset-row-input" name="volume-totalVolumeGain" id="volume-totalVolumeGain" type="number" readonly="readonly"/>
+        </div>
+      </fieldset>
+      <p class="controls-text">* Axis X points to the right; axis Y points to the top; axis Z points towards us</p>
+      <p class="controls-text">** These attributes are not of the related objects but added for convenience</p>
     </form>
-
     <div class="field">
-        <div class="object object_panner hidden">
-            <div class="object-instance">→</div>
-            <div class="object-cone object-cone_right"></div>
-            <div class="object-cone object-cone_left"></div>
-            <div class="object-ref-distance"></div>
-            <div class="object-max-distance"></div>
-        </div>
-        <div class="object object_listener hidden">
-            <div class="object-instance">→</div>
-        </div>
+      <div class="object object_panner hidden">
+        <div class="object-instance">→</div>
+        <div class="object-cone object-cone_right"></div>
+        <div class="object-cone object-cone_left"></div>
+        <div class="object-ref-distance"></div>
+        <div class="object-max-distance"></div>
+      </div>
+      <div class="object object_listener hidden">
+        <div class="object-instance">→</div>
+      </div>
     </div>
-
-    <div class="click-to-play-message">
-        Tap on the red circle or this message to start playing sound
-    </div>
-</body>
+    <div class="click-to-play-message">Tap on the red circle or this message to start playing sound</div>
+  </body>
 </html>
