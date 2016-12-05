@@ -10,7 +10,7 @@
     "http-server": "0.9.0"
   },
   "scripts": {
-    "start": "node node_modules/http-server/bin/http-server"
+    "start": "node node_modules/http-server/bin/http-server -a 127.0.0.1"
   },
   "keywords": [],
   "author": "",

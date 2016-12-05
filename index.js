@@ -116,7 +116,7 @@
     formNode['panner-positionZ'].min =
     formNode['panner-positionZ'].max =
     formNode['panner-positionZ'].value = state.panner.position[2];
-    formNode['panner-angle'].value = getAngleFromVector(state.panner.orientation);
+    formNode['panner-orientationAngle'].value = getAngleFromVector(state.panner.orientation);
     formNode['panner-coneInnerAngle'].value = state.panner.coneInnerAngle;
     formNode['panner-coneOuterAngle'].value = state.panner.coneOuterAngle;
     formNode['panner-coneOuterGain'].value = state.panner.coneOuterGain;
@@ -136,7 +136,7 @@
             case 'panner-positionZ':
                 state.panner.position[2] = event.target.valueAsNumber;
                 break;
-            case 'panner-angle':
+            case 'panner-orientationAngle':
                 state.panner.orientation = getVectorFromAngle(event.target.valueAsNumber);
                 break;
             case 'panner-coneInnerAngle':
@@ -323,7 +323,7 @@
         formNode['listener-upX'].value = normalizedListenerUp[0];
         formNode['listener-upY'].value = normalizedListenerUp[1];
         formNode['listener-upZ'].value = normalizedListenerUp[2];
-        formNode['listener-angleForward'].value = Math.round(getAngleFromVector(state.listener.forward));
+        formNode['listener-forwardAngle'].value = Math.round(getAngleFromVector(state.listener.forward));
 
         let volumeDistanceGainCoeff;
         switch (state.panner.distanceModel) {
@@ -385,7 +385,7 @@
      * @returns {string}
      */
     function getTransformValue({ position, angle }) {
-        return `${position ? `translate(${position[0]}px, ${position[1]}px)` : ``} ${ angle ? `rotateZ(${angle}deg)` : `` }`.trim();
+        return `${position ? `translate(${position[0]}px, ${position[1]}px)` : ``} ${ angle ? `rotateZ(${Math.round(angle)}deg)` : `` }`.trim();
     }
 
     /**
@@ -481,7 +481,7 @@
      */
     function getVectorFromAngle(angle) {
         angle = angle * Math.PI / 180;
-        return [Math.cos(angle), Math.sin(angle), 0];
+        return [Math.cos(angle), -Math.sin(angle), 0];
     }
 
     /**
